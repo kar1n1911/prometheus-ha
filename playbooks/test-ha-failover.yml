@@ -1,0 +1,83 @@
+---
+# test-ha-failover.yml
+# Simulates Prometheus node A going down and validates B continues uninterrupted.
+# Run: ansible-playbook -i inventory/hosts.yml playbooks/test-ha-failover.yml
+# WARNING: This stops Prometheus A temporarily. Run in a maintenance window.
+
+- name: Record baseline — both nodes healthy
+  hosts: monitoring
+  gather_facts: false
+  tasks:
+    - name: Confirm Prometheus is healthy before test
+      ansible.builtin.uri:
+        url: "http://localhost:9090/-/healthy"
+        status_code: 200
+
+    - name: Confirm Alertmanager cluster is healthy
+      ansible.builtin.uri:
+        url: "http://localhost:9093/-/healthy"
+        status_code: 200
+
+- name: Stop Prometheus A to simulate node failure
+  hosts: monitor-node-01
+  gather_facts: false
+  tasks:
+    - name: Stop prometheus on node A
+      ansible.builtin.systemd:
+        name: prometheus
+        state: stopped
+
+    - name: Pause to let scrape interval elapse
+      ansible.builtin.pause:
+        seconds: 30
+        prompt: "Prometheus A is stopped. Check Grafana — dashboards should still serve from B."
+
+- name: Validate node B is still collecting during A outage
+  hosts: monitor-node-02
+  gather_facts: false
+  tasks:
+    - name: Confirm Prometheus B is still healthy
+      ansible.builtin.uri:
+        url: "http://localhost:9090/-/healthy"
+        status_code: 200
+
+    - name: Query B for recent node metrics
+      ansible.builtin.uri:
+        url: "http://localhost:9090/api/v1/query"
+        method: GET
+        body_format: form-urlencoded
+        body:
+          query: "up{job='node'}"
+        return_content: true
+      register: query_result
+
+    - name: Show node targets visible from B
+      ansible.builtin.debug:
+        msg: "{{ query_result.json.data.result | map(attribute='metric') | list }}"
+
+    - name: Confirm Alertmanager B still functioning
+      ansible.builtin.uri:
+        url: "http://localhost:9093/-/healthy"
+        status_code: 200
+
+- name: Restore Prometheus A
+  hosts: monitor-node-01
+  gather_facts: false
+  tasks:
+    - name: Start prometheus on node A
+      ansible.builtin.systemd:
+        name: prometheus
+        state: started
+
+    - name: Wait for Prometheus A to become healthy
+      ansible.builtin.uri:
+        url: "http://localhost:9090/-/healthy"
+        status_code: 200
+      retries: 12
+      delay: 5
+      register: recovery_check
+      until: recovery_check.status == 200
+
+    - name: Report recovery
+      ansible.builtin.debug:
+        msg: "Prometheus A has recovered. Note: TSDB on A has a gap for the outage period. B has continuous data."

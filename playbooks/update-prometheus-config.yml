@@ -1,0 +1,37 @@
+---
+# update-prometheus-config.yml
+# Re-renders prometheus.yml from inventory and reloads — use after adding/removing targets.
+# Run: ansible-playbook -i inventory/hosts.yml playbooks/update-prometheus-config.yml
+
+- name: Re-render and reload Prometheus configuration
+  hosts: monitoring
+  gather_facts: false
+  tasks:
+    - name: Render prometheus.yml from inventory
+      ansible.builtin.template:
+        src: ../roles/prometheus/templates/prometheus.yml.j2
+        dest: /etc/prometheus/prometheus.yml
+        owner: prometheus
+        group: prometheus
+        mode: '0644'
+        validate: "promtool check config %s"
+      notify: Reload prometheus
+
+    - name: Re-render alert rules
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "/etc/prometheus/rules/{{ item | basename | regex_replace('\\.j2$', '') }}"
+        owner: prometheus
+        group: prometheus
+        mode: '0644'
+        validate: "promtool check rules %s"
+      with_fileglob:
+        - "../roles/prometheus/templates/rules/*.yml.j2"
+      notify: Reload prometheus
+
+  handlers:
+    - name: Reload prometheus
+      ansible.builtin.uri:
+        url: "http://localhost:9090/-/reload"
+        method: POST
+        status_code: 200

@@ -1,0 +1,87 @@
+---
+- name: Create snmp_exporter system user
+  ansible.builtin.user:
+    name: snmp_exporter
+    system: true
+    shell: /sbin/nologin
+    createhome: false
+    state: present
+
+- name: Create snmp_exporter directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: snmp_exporter
+    group: snmp_exporter
+    mode: '0755'
+  loop:
+    - /etc/snmp_exporter
+    - /var/lib/snmp_exporter
+
+- name: Download snmp_exporter binary archive
+  ansible.builtin.get_url:
+    url: "https://github.com/prometheus/snmp_exporter/releases/download/v{{ snmp_exporter_version }}/snmp_exporter-{{ snmp_exporter_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/snmp_exporter-{{ snmp_exporter_version }}.tar.gz"
+    mode: '0644'
+
+- name: Extract snmp_exporter
+  ansible.builtin.unarchive:
+    src: "/tmp/snmp_exporter-{{ snmp_exporter_version }}.tar.gz"
+    dest: /tmp
+    remote_src: true
+    creates: "/tmp/snmp_exporter-{{ snmp_exporter_version }}.linux-amd64"
+
+- name: Install snmp_exporter binary
+  ansible.builtin.copy:
+    src: "/tmp/snmp_exporter-{{ snmp_exporter_version }}.linux-amd64/snmp_exporter"
+    dest: /usr/local/bin/snmp_exporter
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: true
+  notify: Restart snmp_exporter
+
+- name: Render snmp_exporter config
+  ansible.builtin.template:
+    src: snmp.yml.j2
+    dest: /etc/snmp_exporter/snmp.yml
+    owner: snmp_exporter
+    group: snmp_exporter
+    mode: '0640'
+  notify: Restart snmp_exporter
+
+- name: Deploy snmp_exporter systemd unit
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/snmp_exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=SNMP Exporter for Prometheus
+      Documentation=https://github.com/prometheus/snmp_exporter
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=snmp_exporter
+      Group=snmp_exporter
+      ExecStart=/usr/local/bin/snmp_exporter \
+        --config.file=/etc/snmp_exporter/snmp.yml \
+        --web.listen-address=0.0.0.0:{{ snmp_exporter_port }}
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
+  notify:
+    - Reload systemd
+    - Restart snmp_exporter
+
+- name: Enable and start snmp_exporter
+  ansible.builtin.systemd:
+    name: snmp_exporter
+    enabled: true
+    state: started
+    daemon_reload: true

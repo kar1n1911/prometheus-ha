@@ -1,0 +1,159 @@
+---
+groups:
+
+  - name: instance_health
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.instance }} is down"
+          description: "{{ $labels.job }}/{{ $labels.instance }} has been unreachable for more than 2 minutes."
+
+      - alert: PrometheusTargetMissing
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus target missing: {{ $labels.instance }}"
+          description: "A Prometheus scrape target has disappeared from job {{ $labels.job }}."
+
+  - name: node_resources
+    rules:
+      - alert: HighCPUSaturation
+        expr: >
+          (1 - avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 0.90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU saturation on {{ $labels.instance }}"
+          description: "CPU saturation is above 90% for 10 minutes on {{ $labels.instance }}."
+
+      - alert: DiskSpaceLow
+        expr: >
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs"} /
+           node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs"}) < 0.15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has less than 15% free."
+
+      - alert: DiskSpaceCritical
+        expr: >
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs"} /
+           node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs"}) < 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has less than 5% free."
+
+      - alert: HighMemoryUsage
+        expr: >
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 90% for 10 minutes on {{ $labels.instance }}."
+
+      - alert: DiskReadingTooSlow
+        expr: >
+          rate(node_disk_io_time_seconds_total[5m]) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk IO saturation on {{ $labels.instance }}"
+          description: "Disk {{ $labels.device }} on {{ $labels.instance }} IO time is above 90%."
+
+  - name: postgres
+    rules:
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL down on {{ $labels.instance }}"
+          description: "PostgreSQL exporter cannot reach the database on {{ $labels.instance }}."
+
+      - alert: PostgresConnectionSaturation
+        expr: >
+          pg_stat_activity_count / pg_settings_max_connections > 0.80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL connections saturated on {{ $labels.instance }}"
+          description: "More than 80% of max_connections in use on {{ $labels.instance }}."
+
+      - alert: PostgresDeadTuples
+        expr: >
+          rate(pg_stat_user_tables_n_dead_tup[5m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High dead tuple rate on {{ $labels.instance }}"
+          description: "Dead tuple accumulation detected — autovacuum may not be keeping up on {{ $labels.instance }}."
+
+      - alert: PostgresReplicationLag
+        expr: >
+          pg_replication_lag > 300
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL replication lag on {{ $labels.instance }}"
+          description: "Replication lag is over 300 seconds on {{ $labels.instance }}."
+
+  - name: proxmox
+    rules:
+      - alert: ProxmoxVMDown
+        expr: pve_up{id=~"qemu/.*|lxc/.*"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Proxmox VM/CT down: {{ $labels.id }}"
+          description: "VM or container {{ $labels.id }} on Proxmox has been offline for 2 minutes."
+
+      - alert: ProxmoxNodeDown
+        expr: pve_up{id=~"node/.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Proxmox node down: {{ $labels.id }}"
+          description: "Proxmox node {{ $labels.id }} is offline."
+
+  - name: monitoring_platform
+    rules:
+      - alert: AlertmanagerNotificationFailed
+        expr: >
+          rate(alertmanager_notifications_failed_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alertmanager notification failures on {{ $labels.instance }}"
+          description: "Alertmanager is failing to send notifications via {{ $labels.integration }}."
+
+      - alert: PrometheusRuleEvaluationSlow
+        expr: >
+          prometheus_rule_evaluation_duration_seconds{quantile="0.9"} > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus rule evaluation slow on {{ $labels.instance }}"
+          description: "Rule evaluation is taking more than 100ms at the 90th percentile."

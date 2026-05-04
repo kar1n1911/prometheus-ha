@@ -1,0 +1,29 @@
+---
+# site.yml — full stack deployment
+# Run: ansible-playbook -i inventory/hosts.yml site.yml
+# Partial runs: ansible-playbook -i inventory/hosts.yml site.yml --tags node_exporter
+
+# - name: Deploy exporters to monitored Linux hosts
+#   hosts: linux_nodes
+#   gather_facts: true
+#   tags: [node_exporter, exporters]
+#   roles:
+#     - node_exporter
+
+# - name: Deploy postgres_exporter to database hosts
+#   hosts: postgres_servers
+#   gather_facts: true
+#   tags: [postgres_exporter, exporters]
+#   roles:
+#     - postgres_exporter
+
+- name: Deploy monitoring platform (Prometheus, Alertmanager, Grafana)
+  hosts: monitoring
+  gather_facts: true
+  tags: [monitoring_platform]
+  roles:
+    - prometheus
+    - alertmanager
+    - grafana
+    - proxmox_exporter   # runs on monitoring nodes, queries PVE API
+    - snmp_exporter      # runs on monitoring nodes, queries switches via SNMP

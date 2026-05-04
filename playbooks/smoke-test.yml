@@ -1,0 +1,79 @@
+---
+# smoke-test.yml
+# Validates the monitoring stack is healthy after deployment.
+# Run: ansible-playbook -i inventory/hosts.yml playbooks/smoke-test.yml
+
+- name: Smoke test monitoring platform
+  hosts: monitoring
+  gather_facts: false
+  tasks:
+
+    - name: Check Prometheus is responding
+      ansible.builtin.uri:
+        url: "http://localhost:9090/-/healthy"
+        method: GET
+        status_code: 200
+      register: prom_health
+
+    - name: Check Prometheus config is valid
+      ansible.builtin.command: promtool check config /etc/prometheus/prometheus.yml
+      changed_when: false
+
+    - name: Check Alertmanager is responding
+      ansible.builtin.uri:
+        url: "http://localhost:9093/-/healthy"
+        method: GET
+        status_code: 200
+
+    - name: Check Grafana is responding
+      ansible.builtin.uri:
+        url: "http://localhost:{{ grafana_port }}/api/health"
+        method: GET
+        status_code: 200
+
+    - name: Check pve_exporter is responding
+      ansible.builtin.uri:
+        url: "http://localhost:{{ proxmox_exporter_port }}/metrics"
+        method: GET
+        status_code: 200
+      when: groups['proxmox_nodes'] | length > 0
+
+    - name: Report Prometheus targets status
+      ansible.builtin.uri:
+        url: "http://localhost:9090/api/v1/targets"
+        method: GET
+        return_content: true
+      register: targets_response
+
+    - name: Show targets with issues
+      ansible.builtin.debug:
+        msg: "Target {{ item.labels.instance }} ({{ item.labels.job }}) is {{ item.health }}: {{ item.lastError }}"
+      loop: "{{ (targets_response.json.data.activeTargets | selectattr('health', 'ne', 'up') | list) }}"
+      when: targets_response.json.data.activeTargets | selectattr('health', 'ne', 'up') | list | length > 0
+
+    - name: All targets healthy
+      ansible.builtin.debug:
+        msg: "All {{ targets_response.json.data.activeTargets | length }} targets are up"
+      when: targets_response.json.data.activeTargets | selectattr('health', 'ne', 'up') | list | length == 0
+
+- name: Smoke test exporters on monitored hosts
+  hosts: linux_nodes
+  gather_facts: false
+  tasks:
+
+    - name: Check node_exporter is responding
+      ansible.builtin.uri:
+        url: "http://localhost:{{ node_exporter_port }}/metrics"
+        method: GET
+        status_code: 200
+
+- name: Smoke test postgres_exporter
+  hosts: postgres_servers
+  gather_facts: false
+  tasks:
+
+    - name: Check postgres_exporter is responding
+      ansible.builtin.uri:
+        url: "http://localhost:{{ postgres_exporter_port }}/metrics"
+        method: GET
+        status_code: 200

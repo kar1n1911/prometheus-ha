@@ -1,0 +1,139 @@
+---
+global:
+  scrape_interval: {{ prometheus_scrape_interval }}
+  evaluation_interval: {{ prometheus_evaluation_interval }}
+  # external_labels differentiate this node's TSDB data in Grafana and Thanos.
+  # NOTE: do NOT include these labels in alert rule expressions — they are
+  # stripped by Alertmanager fingerprinting so deduplication works correctly.
+  external_labels:
+    monitor: '{{ inventory_hostname }}'
+    replica: '{{ prometheus_replica_label }}'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+{% for host in groups['monitoring'] %}
+            - '{{ hostvars[host].ansible_host }}:9093'
+{% endfor %}
+
+rule_files:
+  - '{{ prometheus_config_dir }}/rules/*.yml'
+
+scrape_configs:
+
+  # Prometheus scrapes itself
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+
+  # Node Exporter — all Linux hosts in inventory
+{% if groups['linux_nodes'] | length > 0 %}
+  - job_name: node
+    static_configs:
+{% for host in groups['linux_nodes'] %}
+      - targets:
+          - '{{ hostvars[host].ansible_host }}:{{ node_exporter_port }}'
+        labels:
+          hostname: '{{ host }}'
+{% if hostvars[host].prometheus_labels is defined %}
+{% for key, value in hostvars[host].prometheus_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+  # PostgreSQL exporter — hosts in postgres_servers group
+{% if groups['postgres_servers'] | length > 0 %}
+  - job_name: postgres
+    static_configs:
+{% for host in groups['postgres_servers'] %}
+      - targets:
+          - '{{ hostvars[host].ansible_host }}:{{ postgres_exporter_port }}'
+        labels:
+          hostname: '{{ host }}'
+{% if hostvars[host].prometheus_labels is defined %}
+{% for key, value in hostvars[host].prometheus_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+  # Proxmox VE — via prometheus-pve-exporter running on monitoring nodes
+  # Multi-target pattern: one exporter instance queries all PVE nodes via API
+{% if groups['proxmox_nodes'] | length > 0 %}
+  - job_name: proxmox
+    metrics_path: /pve
+    params:
+      module: [default]
+      cluster: ['1']
+      node: ['1']
+    static_configs:
+      - targets:
+{% for host in groups['proxmox_nodes'] %}
+          - '{{ hostvars[host].ansible_host }}'
+{% endfor %}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'localhost:{{ proxmox_exporter_port }}'
+{% endif %}
+
+  # MAAS region controller — scraped directly, no separate exporter needed
+{% if groups['maas_controllers'] | length > 0 %}
+  - job_name: maas
+    metrics_path: /MAAS/metrics
+    static_configs:
+{% for host in groups['maas_controllers'] %}
+      - targets:
+          - '{{ hostvars[host].ansible_host }}:5240'
+        labels:
+          hostname: '{{ host }}'
+{% endfor %}
+{% endif %}
+
+  # SNMP switches via snmp_exporter.
+  # Safety requirement: do not probe too frequently. Max 1 scrape per hour.
+{% if groups['snmp_switches'] is defined and groups['snmp_switches'] | length > 0 %}
+  - job_name: snmp_switches
+    scrape_interval: {{ snmp_scrape_interval }}
+    scrape_timeout: {{ snmp_scrape_timeout }}
+    metrics_path: /snmp
+    params:
+      module: ['{{ snmp_module_name }}']
+      auth: ['v2_public']
+    static_configs:
+      - targets:
+{% for host in groups['snmp_switches'] %}
+          - '{{ hostvars[host].ansible_host }}'
+{% endfor %}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 'localhost:{{ snmp_exporter_port }}'
+{% endif %}
+
+  # Alertmanager self-monitoring
+  - job_name: alertmanager
+    static_configs:
+      - targets:
+{% for host in groups['monitoring'] %}
+          - '{{ hostvars[host].ansible_host }}:9093'
+{% endfor %}
+
+  # Grafana self-monitoring
+  - job_name: grafana
+    static_configs:
+      - targets:
+{% for host in groups['monitoring'] %}
+          - '{{ hostvars[host].ansible_host }}:{{ grafana_port }}'
+{% endfor %}

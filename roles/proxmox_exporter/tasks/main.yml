@@ -1,0 +1,79 @@
+---
+- name: Install Python3 and pip
+  ansible.builtin.apt:
+    name:
+      - python3
+      - python3-pip
+      - python3-venv
+    state: present
+    update_cache: true
+
+- name: Create pve_exporter system user
+  ansible.builtin.user:
+    name: pve_exporter
+    system: true
+    shell: /sbin/nologin
+    createhome: false
+    state: present
+
+- name: Create pve_exporter directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: pve_exporter
+    group: pve_exporter
+    mode: '0755'
+  loop:
+    - /opt/pve_exporter
+    - /etc/pve_exporter
+
+- name: Install prometheus-pve-exporter into virtualenv
+  ansible.builtin.pip:
+    name: prometheus-pve-exporter
+    virtualenv: /opt/pve_exporter/venv
+    virtualenv_command: python3 -m venv
+  notify: Restart pve_exporter
+
+- name: Render pve_exporter credentials config
+  ansible.builtin.template:
+    src: pve.yml.j2
+    dest: /etc/pve_exporter/pve.yml
+    owner: pve_exporter
+    group: pve_exporter
+    mode: '0640'
+  notify: Restart pve_exporter
+
+- name: Deploy pve_exporter systemd unit
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/pve_exporter.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Prometheus Proxmox VE Exporter
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=pve_exporter
+      Group=pve_exporter
+      ExecStart=/opt/pve_exporter/venv/bin/pve_exporter \
+        --config.file /etc/pve_exporter/pve.yml \
+        --web.listen-address 0.0.0.0:{{ proxmox_exporter_port }}
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
+  notify:
+    - Reload systemd
+    - Restart pve_exporter
+
+- name: Enable and start pve_exporter
+  ansible.builtin.systemd:
+    name: pve_exporter
+    enabled: true
+    state: started
+    daemon_reload: true

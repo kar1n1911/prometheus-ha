@@ -1,0 +1,10 @@
+---
+# Per-host Prometheus labels — rendered into scrape static_configs
+prometheus_labels:
+  environment: production
+  role: database
+  datacenter: se-1
+
+# postgres_exporter DSN for this host
+# Store the real password in Ansible Vault in production
+postgres_exporter_dsn: "postgresql://exporter:exporterpass@localhost:5432/postgres?sslmode=disable"

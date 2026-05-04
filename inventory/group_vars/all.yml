@@ -1,0 +1,57 @@
+---
+# --- Common SSH settings ---
+ansible_user: ubuntu
+ansible_become: true
+
+# --- Prometheus global settings ---
+prometheus_version: "2.51.0"
+prometheus_scrape_interval: 15s
+prometheus_evaluation_interval: 15s
+prometheus_retention_time: 15d
+prometheus_storage_path: /var/lib/prometheus
+prometheus_config_dir: /etc/prometheus
+prometheus_web_listen_address: "0.0.0.0:9090"
+
+# --- Alertmanager settings ---
+alertmanager_version: "0.27.0"
+alertmanager_config_dir: /etc/alertmanager
+alertmanager_storage_path: /var/lib/alertmanager
+alertmanager_web_listen_address: "0.0.0.0:9093"
+alertmanager_cluster_port: 9094
+
+# --- Grafana settings ---
+grafana_version: "10.4.2"
+grafana_admin_user: admin
+grafana_admin_password: "changeme"   # Override in vault
+grafana_port: 3000
+
+# --- Node Exporter settings ---
+node_exporter_version: "1.8.0"
+node_exporter_port: 9100
+
+# --- Postgres exporter settings ---
+postgres_exporter_version: "0.15.0"
+postgres_exporter_port: 9187
+
+# --- Proxmox exporter settings ---
+proxmox_exporter_port: 9221
+
+# --- SNMP exporter settings ---
+snmp_exporter_version: "0.27.0"
+snmp_exporter_port: 9116
+snmp_scrape_interval: 1h
+snmp_scrape_timeout: 30s
+snmp_module_name: if_mib
+
+# Prefer vault overrides in production
+snmp_v2_community: "public"
+snmp_v3_username: "snmpv3user"
+snmp_v3_auth_protocol: "SHA"
+snmp_v3_auth_password: "AuthP@ss123"
+snmp_v3_priv_protocol: "AES"
+snmp_v3_priv_password: "PrivP@ss123"
+
+# --- Alert routing ---
+alertmanager_receiver_email: "ops@example.com"
+alertmanager_smtp_host: "smtp.example.com:587"
+alertmanager_smtp_from: "alertmanager@example.com"

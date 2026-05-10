@@ -5,14 +5,14 @@
 Host bastion
   HostName 203.0.113.10
   User ubuntu
-  IdentityFile /Users/coleanderson/Sync/HomeWorks/DV2602/prometheus-ha/Global_Key.pem
+  IdentityFile Global_Key.pem
   IdentitiesOnly yes
   StrictHostKeyChecking accept-new
 
 # Monitoring nodes should also traverse bastion.
 Host monitor-node-*
   ProxyJump bastion
-  IdentityFile /Users/coleanderson/Sync/HomeWorks/DV2602/prometheus-ha/Global_Key.pem
+  IdentityFile Global_Key.pem
   IdentitiesOnly yes
   ServerAliveInterval 30
   ServerAliveCountMax 3
@@ -21,7 +21,7 @@ Host monitor-node-*
 # Internal lab subnet: always traverse bastion.
 Host 10.8.50.*
   ProxyJump bastion
-  IdentityFile /Users/coleanderson/Sync/HomeWorks/DV2602/prometheus-ha/Global_Key.pem
+  IdentityFile Global_Key.pem
   IdentitiesOnly yes
   ServerAliveInterval 30
   ServerAliveCountMax 3

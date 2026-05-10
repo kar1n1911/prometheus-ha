@@ -52,7 +52,7 @@ All `10.8.50.*` targets will then connect through `ProxyJump bastion`.
 
 ### 2. Sensitive values — Ansible Vault
 
-Never commit credentials to source control. Use Vault:
+Never commit credentials to source control. Use Vault (Vault Password abcd1234@):
 
 ```bash
 # Create vault file

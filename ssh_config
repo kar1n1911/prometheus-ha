@@ -3,20 +3,21 @@
 
 
 Host bastion
-  HostName 203.0.113.10
+  HostName 194.47.155.141
   User ubuntu
   IdentityFile Global_Key.pem
   IdentitiesOnly yes
   StrictHostKeyChecking accept-new
 
 # Monitoring nodes should also traverse bastion.
-Host monitor-node-*
+Host 10.0.1.*
+  User ubuntu
   ProxyJump bastion
-  IdentityFile Global_Key.pem
+  IdentityFile Global_key.pem
   IdentitiesOnly yes
+  StrictHostKeyChecking accept-new
   ServerAliveInterval 30
   ServerAliveCountMax 3
-  StrictHostKeyChecking accept-new
 
 # Internal lab subnet: always traverse bastion.
 Host 10.8.50.*

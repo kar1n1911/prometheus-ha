@@ -14,14 +14,14 @@ datasources:
       queryTimeout: "60s"
       httpMethod: POST
 
-  # Prometheus B — secondary datasource for failover / cross-checking
-  - name: Prometheus B
-    uid: {{ grafana_prometheus_b_uid }}
-    type: prometheus
-    url: http://{{ hostvars['monitor-node-02'].ansible_host }}:9090
-    access: proxy
-    isDefault: false
-    jsonData:
-      timeInterval: "15s"
-      queryTimeout: "60s"
-      httpMethod: POST
+{#  # Prometheus B — secondary datasource for failover / cross-checking#}
+{#  - name: Prometheus B#}
+{#    uid: {{ grafana_prometheus_b_uid }}#}
+{#    type: prometheus#}
+{#    url: http://{{ hostvars['monitor-node-02'].ansible_host }}:9090#}
+{#    access: proxy#}
+{#    isDefault: false#}
+{#    jsonData:#}
+{#      timeInterval: "15s"#}
+{#      queryTimeout: "60s"#}
+{#      httpMethod: POST#}

@@ -37,6 +37,19 @@ are placeholders — replace with your actual host addresses.
 For database hosts, set `postgres_exporter_dsn` in `inventory/host_vars/<host>.yml`.
 For Proxmox, set `proxmox_api_token_value` (store in Ansible Vault — see below).
 
+### 1.1 SSH jump host (required for internal nodes)
+
+This project uses repository-local `ssh_config` and forces Ansible to use it
+via `ansible.cfg` (`ssh_args = -F ./ssh_config ...`).
+
+Before running playbooks, edit `ssh_config` and set:
+
+- `Host bastion` -> real bastion `HostName`
+- bastion `User`
+- bastion/private key `IdentityFile`
+
+All `10.8.50.*` targets will then connect through `ProxyJump bastion`.
+
 ### 2. Sensitive values — Ansible Vault
 
 Never commit credentials to source control. Use Vault:
@@ -49,12 +62,16 @@ ansible-vault create inventory/group_vars/vault.yml
 vault_grafana_admin_password: "your-secure-password"
 vault_proxmox_api_token_value: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 vault_postgres_exporter_password: "exporterpassword"
+vault_alertmanager_smtp_auth_username: "youraccount@gmail.com"
+vault_alertmanager_smtp_auth_password: "your-gmail-app-password"
 ```
 
 Reference in `group_vars/all.yml`:
 ```yaml
 grafana_admin_password: "{{ vault_grafana_admin_password }}"
 proxmox_api_token_value: "{{ vault_proxmox_api_token_value }}"
+alertmanager_smtp_auth_username: "{{ vault_alertmanager_smtp_auth_username }}"
+alertmanager_smtp_auth_password: "{{ vault_alertmanager_smtp_auth_password }}"
 ```
 
 ### 3. Full deployment

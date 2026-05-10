@@ -2,7 +2,9 @@
 global:
   smtp_smarthost: '{{ alertmanager_smtp_host }}'
   smtp_from: '{{ alertmanager_smtp_from }}'
-  smtp_require_tls: true
+  smtp_require_tls: {{ alertmanager_smtp_require_tls | bool | lower }}
+  smtp_auth_username: '{{ alertmanager_smtp_auth_username }}'
+  smtp_auth_password: '{{ alertmanager_smtp_auth_password }}'
   resolve_timeout: 5m
 
 route:

@@ -53,5 +53,8 @@ snmp_v3_priv_password: "PrivP@ss123"
 
 # --- Alert routing ---
 alertmanager_receiver_email: "ops@example.com"
-alertmanager_smtp_host: "smtp.example.com:587"
-alertmanager_smtp_from: "alertmanager@example.com"
+alertmanager_smtp_host: "smtp.gmail.com:587"
+alertmanager_smtp_from: "youraccount@gmail.com"
+alertmanager_smtp_require_tls: true
+alertmanager_smtp_auth_username: "{{ vault_alertmanager_smtp_auth_username | default('youraccount@gmail.com') }}"
+alertmanager_smtp_auth_password: "{{ vault_alertmanager_smtp_auth_password | default('CHANGE_ME_GMAIL_APP_PASSWORD') }}"

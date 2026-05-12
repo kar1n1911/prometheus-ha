@@ -13,9 +13,9 @@ ExecStart=/usr/local/bin/alertmanager \
   --storage.path={{ alertmanager_storage_path }} \
   --web.listen-address={{ alertmanager_web_listen_address }} \
   --cluster.listen-address=0.0.0.0:{{ alertmanager_cluster_port }} \
-{#{% for peer in alertmanager_cluster_peers %}#}
-{#  --cluster.peer={{ peer }} \#}
-{#{% endfor %}#}
+{% for peer in alertmanager_cluster_peers %}
+  --cluster.peer={{ peer }} \
+{% endfor %}
   --log.level=info
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure

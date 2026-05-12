@@ -5,6 +5,7 @@
 ```
 prometheus-ha/
 ├── ansible.cfg
+├── ssh_config                        # SSH config with ProxyJump via bastion
 ├── site.yml                          # Full stack deployment
 ├── inventory/
 │   ├── hosts.yml                     # SOURCE OF TRUTH — edit here to add/remove targets
@@ -20,7 +21,8 @@ prometheus-ha/
 │   ├── grafana/                      # Grafana + datasource + dashboard provisioning
 │   ├── node_exporter/                # Node Exporter for Linux hosts
 │   ├── postgres_exporter/            # postgres_exporter for database hosts
-│   └── proxmox_exporter/             # prometheus-pve-exporter (runs on monitoring nodes)
+│   ├── proxmox_exporter/             # prometheus-pve-exporter (runs on monitoring nodes)
+│   └── snmp_exporter/                # snmp_exporter (runs on monitoring nodes)
 └── playbooks/
     ├── update-prometheus-config.yml  # Fast re-render and reload (use after inventory change)
     ├── smoke-test.yml                # Validate stack health post-deploy
@@ -123,10 +125,16 @@ fingerprinting, so deduplication works correctly across both nodes.
 
 ### Grafana datasources
 
-Two named datasources are provisioned: `Prometheus A` (default) and `Prometheus B`.
-All dashboards use a `$datasource` template variable — operators can switch the
-entire dashboard to the other node with one dropdown selection. This is both a
-failover mechanism and a useful cross-check tool.
+Grafana datasources are generated dynamically from `groups['monitoring']`.
+For each monitoring node, one datasource is created:
+
+- name: `Prometheus <inventory_hostname>`
+- uid: `prometheus-<inventory_hostname>`
+- url: `http://<ansible_host>:9090`
+
+The first node in the `monitoring` group is set as default datasource.
+Dashboards use a `$datasource` template variable so operators can switch
+between Prometheus replicas quickly.
 
 ### Proxmox exporter placement
 
@@ -168,7 +176,7 @@ pve_up{id=~"qemu/.*"} == 0
 # Rate of scrape errors per job (monitoring platform health)
 rate(scrape_samples_post_metric_relabeling[5m])
 
-# Compare data between Prometheus A and B (run against each datasource)
+# Compare data between replicas (run against each datasource)
 count(up)
 ```
 
@@ -176,7 +184,7 @@ count(up)
 
 | Scenario | Expected behaviour | How to test |
 |---|---|---|
-| Prometheus A stops | Grafana on datasource B unaffected; alerts continue from B | `playbooks/test-ha-failover.yml` |
+| One Prometheus node stops | Switch Grafana datasource to another monitoring node; alerts continue from remaining replicas | `playbooks/test-ha-failover.yml` |
 | One Alertmanager stops | Alerts continue routing via surviving instance | `systemctl stop alertmanager` on one node |
 | Scrape target goes down | `up == 0` fires `InstanceDown` after 2m | Stop `node_exporter` on any monitored host |
 | Prometheus A restarts | TSDB gap visible on A; B has continuous data | Check both datasources in Grafana |

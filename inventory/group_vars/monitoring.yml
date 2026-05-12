@@ -4,7 +4,8 @@
 # Alertmanager peers — both nodes point at each other for clustering
 alertmanager_cluster_peers:
   - "{{ hostvars['monitor-node-01'].ansible_host }}:{{ alertmanager_cluster_port }}"
-
+  - "{{ hostvars['monitor-node-02'].ansible_host }}:{{ alertmanager_cluster_port }}"
 
 # Grafana datasource UIDs (stable — dashboards reference these)
 grafana_prometheus_a_uid: prometheus-a
+grafana_prometheus_b_uid: prometheus-b

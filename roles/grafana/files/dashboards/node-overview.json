@@ -22,7 +22,7 @@
         "type": "datasource",
         "pluginId": "prometheus",
         "label": "Datasource",
-        "description": "Switch between Prometheus A and B",
+        "description": "Switch between Prometheus datasources",
         "hide": 0,
         "includeAll": false,
         "current": {}
@@ -190,6 +190,56 @@
             "steps": [
               { "value": null, "color": "green" },
               { "value": 1, "color": "red" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Prometheus up",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 16, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "expr": "sum(up{job='prometheus'} == 1)",
+          "legendFormat": "Prometheus",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": null, "color": "red" },
+              { "value": 1, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Alertmanager up",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 16, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "targets": [
+        {
+          "expr": "sum(up{job='alertmanager'} == 1)",
+          "legendFormat": "Alertmanager",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "value": null, "color": "red" },
+              { "value": 1, "color": "green" }
             ]
           }
         }

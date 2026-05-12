@@ -90,6 +90,22 @@ ansible-playbook site.yml --ask-vault-pass
 ansible-playbook playbooks/smoke-test.yml
 ```
 
+### 4.1 Run only on monitoring nodes
+
+Use this when you only changed Prometheus / Alertmanager / Grafana / exporters
+that run on monitor nodes, and do not want to touch monitored hosts.
+
+```bash
+# Full monitoring stack on monitoring nodes only
+ansible-playbook site.yml --limit monitoring
+
+# Same, with Vault
+ansible-playbook site.yml --limit monitoring --ask-vault-pass
+
+# Fast config refresh after inventory/rule/template updates
+ansible-playbook playbooks/update-prometheus-config.yml --limit monitoring
+```
+
 ### 5. Adding a new monitored host
 
 Add the host to the relevant group(s) in `inventory/hosts.yml`, then run:

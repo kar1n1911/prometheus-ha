@@ -19,6 +19,7 @@ prometheus-ha/
 │   ├── prometheus/                   # Prometheus binary + config + rules
 │   ├── alertmanager/                 # Alertmanager + cluster config
 │   ├── grafana/                      # Grafana + datasource + dashboard provisioning
+│   ├── haproxy/                      # HAProxy frontend for Grafana
 │   ├── node_exporter/                # Node Exporter for Linux hosts
 │   ├── postgres_exporter/            # postgres_exporter for database hosts
 │   ├── proxmox_exporter/             # prometheus-pve-exporter (runs on monitoring nodes)
@@ -120,6 +121,14 @@ ansible-playbook playbooks/update-prometheus-config.yml
 
 That's it. No manual edits to `prometheus.yml`.
 
+### 5.1 Deploy only HAProxy frontend
+
+If you changed only HAProxy frontend settings:
+
+```bash
+ansible-playbook site.yml --limit haproxy --tags haproxy
+```
+
 ## Architecture notes
 
 ### HA scraping
@@ -151,6 +160,13 @@ For each monitoring node, one datasource is created:
 The first node in the `monitoring` group is set as default datasource.
 Dashboards use a `$datasource` template variable so operators can switch
 between Prometheus replicas quickly.
+
+### Grafana via HAProxy
+
+HAProxy runs on hosts in the `haproxy` inventory group and exposes a single
+Grafana entrypoint (`haproxy_listen_port`, default `3000`). Backends are
+generated automatically from `groups['monitoring']`, with health checks on
+`/api/health`.
 
 ### Proxmox exporter placement
 

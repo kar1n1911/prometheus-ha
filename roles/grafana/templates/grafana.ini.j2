@@ -1,6 +1,7 @@
 [server]
 http_port = {{ grafana_port }}
-domain = {{ ansible_host }}
+domain = {{ grafana_public_url | regex_replace('^https?://', '') | regex_replace('/.*$', '') }}
+root_url = {{ grafana_public_url }}
 
 [security]
 admin_user = {{ grafana_admin_user }}

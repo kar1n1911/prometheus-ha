@@ -27,3 +27,10 @@
     - grafana
     - proxmox_exporter   # runs on monitoring nodes, queries PVE API
     - snmp_exporter      # runs on monitoring nodes, queries switches via SNMP
+
+- name: Deploy HAProxy frontend for Grafana
+  hosts: haproxy
+  gather_facts: true
+  tags: [haproxy, monitoring_frontend]
+  roles:
+    - haproxy

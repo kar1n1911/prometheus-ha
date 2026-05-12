@@ -24,6 +24,13 @@ grafana_version: "10.4.2"
 grafana_admin_user: admin
 grafana_admin_password: "changeme"   # Override in vault
 grafana_port: 3000
+grafana_public_url: "http://localhost:3000"  # Set to HAProxy URL when enabled (e.g. https://grafana.example.com)
+
+# --- HAProxy settings (Grafana frontend) ---
+haproxy_listen_port: 3000
+haproxy_stats_enabled: true
+haproxy_stats_port: 8404
+haproxy_stats_uri: /stats
 
 # --- Node Exporter settings ---
 node_exporter_version: "1.8.0"

@@ -35,6 +35,13 @@ prometheus-ha/
 
 ## Quick start
 
+### 0. Environment settings
+
+- Controller Ansible: `ansible-core 2.12.10`
+- Controller Python: `Python 3.8.20`
+- Monitor node OS target: `Ubuntu Server 22.04` (Jammy)
+- Recommended controller Python: `3.10+` (to avoid `cryptography` deprecation warnings on Python 3.8)
+
 ### 1. Update inventory
 
 Edit `inventory/hosts.yml` to reflect your environment. The IPs in the file
@@ -58,7 +65,9 @@ All `10.8.50.*` targets will then connect through `ProxyJump bastion`.
 
 ### 2. Sensitive values — Ansible Vault
 
-Never commit credentials to source control. Use Vault (Vault Password abcd1234@):
+Never commit credentials to source control. Use Vault:
+
+(Vault default Password abcd1234@)
 
 ```bash
 # Create vault file

@@ -14,11 +14,27 @@
     createhome: false
     state: present
 
-- name: Download node_exporter
-  ansible.builtin.get_url:
-    url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
-    dest: "/tmp/node_exporter-{{ node_exporter_version }}.tar.gz"
-    mode: '0644'
+- name: Ensure curl is installed on Debian-family hosts
+  ansible.builtin.apt:
+    name: curl
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: Ensure curl is installed on RedHat-family hosts
+  ansible.builtin.dnf:
+    name: curl
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Download node_exporter with curl (workaround for get_url TLS client issue)
+  ansible.builtin.command:
+    cmd: >-
+      curl -fL --retry 3 --connect-timeout 10
+      -o /tmp/node_exporter-{{ node_exporter_version }}.tar.gz
+      https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz
+  args:
+    creates: "/tmp/node_exporter-{{ node_exporter_version }}.tar.gz"
 
 - name: Extract node_exporter
   ansible.builtin.unarchive:

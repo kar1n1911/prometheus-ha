@@ -22,7 +22,7 @@ alertmanager_cluster_port: 9094
 # --- Grafana settings ---
 grafana_version: "10.4.2"
 grafana_admin_user: admin
-grafana_admin_password: "changeme"   # Override in vault
+grafana_admin_password: "{{ vault_grafana_admin_password | default('changeme') }}"   # Override in vault
 grafana_port: 3000
 grafana_public_url: "http://localhost:3000"  # Set to HAProxy URL when enabled (e.g. https://grafana.example.com)
 
@@ -39,6 +39,7 @@ node_exporter_port: 9100
 # --- Postgres exporter settings ---
 postgres_exporter_version: "0.15.0"
 postgres_exporter_port: 9187
+postgres_exporter_password: "{{ vault_postgres_exporter_password | default('CHANGE_ME_POSTGRES_EXPORTER_PASSWORD') }}"
 
 # --- Proxmox exporter settings ---
 proxmox_exporter_port: 9221

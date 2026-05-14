@@ -9,8 +9,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Instance {{ $labels.instance }} is down"
-          description: "{{ $labels.job }}/{{ $labels.instance }} has been unreachable for more than 2 minutes."
+          summary: "Instance {{ "{{" }} $labels.instance {{ "}}" }} is down"
+          description: "{{ "{{" }} $labels.job {{ "}}" }}/{{ "{{" }} $labels.instance {{ "}}" }} has been unreachable for more than 2 minutes."
 
       - alert: PrometheusTargetMissing
         expr: up == 0
@@ -18,8 +18,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Prometheus target missing: {{ $labels.instance }}"
-          description: "A Prometheus scrape target has disappeared from job {{ $labels.job }}."
+          summary: "Prometheus target missing: {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "A Prometheus scrape target has disappeared from job {{ "{{" }} $labels.job {{ "}}" }}."
 
   - name: node_resources
     rules:
@@ -30,8 +30,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High CPU saturation on {{ $labels.instance }}"
-          description: "CPU saturation is above 90% for 10 minutes on {{ $labels.instance }}."
+          summary: "High CPU saturation on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "CPU saturation is above 90% for 10 minutes on {{ "{{" }} $labels.instance {{ "}}" }}."
 
       - alert: DiskSpaceLow
         expr: >
@@ -41,8 +41,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Low disk space on {{ $labels.instance }}"
-          description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has less than 15% free."
+          summary: "Low disk space on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "Filesystem {{ "{{" }} $labels.mountpoint {{ "}}" }} on {{ "{{" }} $labels.instance {{ "}}" }} has less than 15% free."
 
       - alert: DiskSpaceCritical
         expr: >
@@ -52,8 +52,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Critical disk space on {{ $labels.instance }}"
-          description: "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} has less than 5% free."
+          summary: "Critical disk space on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "Filesystem {{ "{{" }} $labels.mountpoint {{ "}}" }} on {{ "{{" }} $labels.instance {{ "}}" }} has less than 5% free."
 
       - alert: HighMemoryUsage
         expr: >
@@ -62,8 +62,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High memory usage on {{ $labels.instance }}"
-          description: "Memory usage is above 90% for 10 minutes on {{ $labels.instance }}."
+          summary: "High memory usage on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "Memory usage is above 90% for 10 minutes on {{ "{{" }} $labels.instance {{ "}}" }}."
 
       - alert: DiskReadingTooSlow
         expr: >
@@ -72,8 +72,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Disk IO saturation on {{ $labels.instance }}"
-          description: "Disk {{ $labels.device }} on {{ $labels.instance }} IO time is above 90%."
+          summary: "Disk IO saturation on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "Disk {{ "{{" }} $labels.device {{ "}}" }} on {{ "{{" }} $labels.instance {{ "}}" }} IO time is above 90%."
 
   - name: postgres
     rules:
@@ -83,8 +83,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "PostgreSQL down on {{ $labels.instance }}"
-          description: "PostgreSQL exporter cannot reach the database on {{ $labels.instance }}."
+          summary: "PostgreSQL down on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "PostgreSQL exporter cannot reach the database on {{ "{{" }} $labels.instance {{ "}}" }}."
 
       - alert: PostgresConnectionSaturation
         expr: >
@@ -93,8 +93,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "PostgreSQL connections saturated on {{ $labels.instance }}"
-          description: "More than 80% of max_connections in use on {{ $labels.instance }}."
+          summary: "PostgreSQL connections saturated on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "More than 80% of max_connections in use on {{ "{{" }} $labels.instance {{ "}}" }}."
 
       - alert: PostgresDeadTuples
         expr: >
@@ -103,8 +103,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "High dead tuple rate on {{ $labels.instance }}"
-          description: "Dead tuple accumulation detected — autovacuum may not be keeping up on {{ $labels.instance }}."
+          summary: "High dead tuple rate on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "Dead tuple accumulation detected — autovacuum may not be keeping up on {{ "{{" }} $labels.instance {{ "}}" }}."
 
       - alert: PostgresReplicationLag
         expr: >
@@ -113,8 +113,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "PostgreSQL replication lag on {{ $labels.instance }}"
-          description: "Replication lag is over 300 seconds on {{ $labels.instance }}."
+          summary: "PostgreSQL replication lag on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "Replication lag is over 300 seconds on {{ "{{" }} $labels.instance {{ "}}" }}."
 
   - name: proxmox
     rules:
@@ -124,8 +124,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Proxmox VM/CT down: {{ $labels.id }}"
-          description: "VM or container {{ $labels.id }} on Proxmox has been offline for 2 minutes."
+          summary: "Proxmox VM/CT down: {{ "{{" }} $labels.id {{ "}}" }}"
+          description: "VM or container {{ "{{" }} $labels.id {{ "}}" }} on Proxmox has been offline for 2 minutes."
 
       - alert: ProxmoxNodeDown
         expr: pve_up{id=~"node/.*"} == 0
@@ -133,8 +133,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "Proxmox node down: {{ $labels.id }}"
-          description: "Proxmox node {{ $labels.id }} is offline."
+          summary: "Proxmox node down: {{ "{{" }} $labels.id {{ "}}" }}"
+          description: "Proxmox node {{ "{{" }} $labels.id {{ "}}" }} is offline."
 
   - name: monitoring_platform
     rules:
@@ -145,8 +145,8 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Alertmanager notification failures on {{ $labels.instance }}"
-          description: "Alertmanager is failing to send notifications via {{ $labels.integration }}."
+          summary: "Alertmanager notification failures on {{ "{{" }} $labels.instance {{ "}}" }}"
+          description: "Alertmanager is failing to send notifications via {{ "{{" }} $labels.integration {{ "}}" }}."
 
       - alert: PrometheusRuleEvaluationSlow
         expr: >
@@ -155,5 +155,5 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Prometheus rule evaluation slow on {{ $labels.instance }}"
+          summary: "Prometheus rule evaluation slow on {{ "{{" }} $labels.instance {{ "}}" }}"
           description: "Rule evaluation is taking more than 100ms at the 90th percentile."

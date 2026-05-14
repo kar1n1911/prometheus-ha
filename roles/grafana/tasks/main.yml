@@ -1,13 +1,12 @@
 ---
 - name: Add Grafana apt repository key
-  ansible.builtin.get_url:
+  ansible.builtin.apt_key:
     url: https://apt.grafana.com/gpg.key
-    dest: /etc/apt/keyrings/grafana.gpg
-    mode: '0644'
+    state: present
 
 - name: Add Grafana apt repository
   ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main"
+    repo: "deb https://apt.grafana.com stable main"
     state: present
     filename: grafana
 
@@ -25,9 +24,19 @@
     group: grafana
     mode: '0755'
   loop:
+    - /var/lib/grafana
     - /etc/grafana/provisioning/datasources
     - /etc/grafana/provisioning/dashboards
     - /var/lib/grafana/dashboards
+
+- name: Ensure Grafana data directory ownership
+  ansible.builtin.file:
+    path: /var/lib/grafana
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: '0750'
+    recurse: true
 
 - name: Provision datasources
   ansible.builtin.template:
@@ -49,8 +58,8 @@
 
 - name: Copy dashboard JSON files
   ansible.builtin.copy:
-    src: "dashboards/{{ item }}"
-    dest: "/var/lib/grafana/dashboards/{{ item }}"
+    src: "{{ item }}"
+    dest: "/var/lib/grafana/dashboards/{{ item | basename }}"
     owner: grafana
     group: grafana
     mode: '0644'

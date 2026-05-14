@@ -40,7 +40,6 @@ prometheus-ha/
 - Controller Ansible: `ansible-core 2.12.10`
 - Controller Python: `Python 3.8.20`
 - Monitor node OS target: `Ubuntu Server 22.04` (Jammy)
-- Recommended controller Python: `3.10+` (to avoid `cryptography` deprecation warnings on Python 3.8)
 
 ### 1. Update inventory
 

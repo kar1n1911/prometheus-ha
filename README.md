@@ -10,11 +10,14 @@ prometheus-ha/
 ├── inventory/
 │   ├── hosts.yml                     # SOURCE OF TRUTH — edit here to add/remove targets
 │   ├── group_vars/
-│   │   ├── all.yml                   # Global defaults (versions, ports, settings)
+│   │   ├── all/
+│   │   │   ├── main.yml              # Global defaults (versions, ports, settings)
+│   │   │   └── vault.yml             # Encrypted secrets (Ansible Vault)
 │   │   └── monitoring.yml            # Monitoring-node-specific vars
 │   └── host_vars/
-│       ├── db-01.yml                 # Per-host labels and DSN
-│       └── db-02.yml
+│       ├── pNode2.yml                # Per-host labels and DSN
+│       ├── pNode3.yml
+│       └── pNode4.yml
 ├── roles/
 │   ├── prometheus/                   # Prometheus binary + config + rules
 │   ├── alertmanager/                 # Alertmanager + cluster config
@@ -59,7 +62,7 @@ Never commit credentials to source control. Use Vault (Vault Password abcd1234@)
 
 ```bash
 # Create vault file
-ansible-vault create inventory/group_vars/vault.yml
+ansible-vault create inventory/group_vars/all/vault.yml
 
 # Inside vault.yml:
 vault_grafana_admin_password: "your-secure-password"
@@ -69,7 +72,7 @@ vault_alertmanager_smtp_auth_username: "youraccount@gmail.com"
 vault_alertmanager_smtp_auth_password: "your-gmail-app-password"
 ```
 
-Reference in `group_vars/all.yml`:
+Reference in `group_vars/all/main.yml`:
 ```yaml
 grafana_admin_password: "{{ vault_grafana_admin_password }}"
 proxmox_api_token_value: "{{ vault_proxmox_api_token_value }}"

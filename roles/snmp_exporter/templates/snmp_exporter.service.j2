@@ -1,0 +1,18 @@
+[Unit]
+Description=SNMP Exporter for Prometheus
+Documentation=https://github.com/prometheus/snmp_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=snmp_exporter
+Group=snmp_exporter
+ExecStart=/usr/local/bin/snmp_exporter \
+  --config.file=/etc/snmp_exporter/snmp.yml \
+  --web.listen-address=0.0.0.0:{{ snmp_exporter_port }}
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

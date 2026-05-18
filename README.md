@@ -16,6 +16,7 @@ prometheus-ha/
 │   │   └── monitoring.yml            # Monitoring-node-specific vars
 │   └── host_vars/
 │       ├── pNode2.yml                # Per-host labels and DSN
+│       ├── bob.yaml                  # Example custom_service scrape config
 │       ├── pNode3.yml
 │       └── pNode4.yml
 ├── roles/
@@ -48,6 +49,8 @@ are placeholders — replace with your actual host addresses.
 
 For database hosts, set `postgres_exporter_dsn` in `inventory/host_vars/<host>.yml`.
 For Proxmox, set `proxmox_api_token_value` (store in Ansible Vault — see below).
+For services that already expose their own Prometheus exporter, add them to
+`custom_service` and configure scraping in `inventory/host_vars/<host>.yml`.
 
 ### 1.1 SSH jump host (required for internal nodes)
 
@@ -139,6 +142,75 @@ If you changed only HAProxy frontend settings:
 ```bash
 ansible-playbook site.yml --limit haproxy --tags haproxy
 ```
+
+### 5.2 Add a custom service exporter
+
+Use the `custom_service` inventory group for hosts that already run an exporter.
+This project does not deploy anything to those hosts; it only renders Prometheus
+scrape jobs from host variables.
+
+Add the host in `inventory/hosts.yml`:
+
+```yaml
+custom_service:
+  hosts:
+    bob:
+      ansible_host: 13.48.17.69
+```
+
+Then create or update `inventory/host_vars/<host>.yml`:
+
+```yaml
+---
+custom_service_job_name: custom_service_bob
+custom_service_port: 9100
+custom_service_scheme: http
+custom_service_metrics_path: /metrics
+custom_service_scrape_interval: 30s
+custom_service_scrape_timeout: 10s
+
+# Prefer Vault for real credentials.
+# custom_service_basic_auth_username: "{{ vault_bob_exporter_username }}"
+# custom_service_basic_auth_password: "{{ vault_bob_exporter_password }}"
+# custom_service_bearer_token: "{{ vault_bob_exporter_bearer_token }}"
+
+custom_service_labels:
+  service: bob
+  environment: custom
+```
+
+Apply the scrape config change:
+
+```bash
+ansible-playbook playbooks/update-prometheus-config.yml --limit monitoring --ask-vault-pass
+```
+
+The implementation lives in
+`roles/prometheus/templates/prometheus.yml.j2`. Each host in `custom_service`
+gets its own scrape job so credentials, scrape interval, timeout, scheme, and
+metrics path can differ per host.
+
+#### custom_service host_vars API
+
+| Variable | Required | Default | Description |
+|---|---:|---|---|
+| `custom_service_job_name` | No | `custom_service_<host>` | Prometheus `job_name`. |
+| `custom_service_target` | No | `<ansible_host>:<custom_service_port>` | Full target address. Use this to override host and port together. |
+| `custom_service_port` | No | `9100` | Exporter port when `custom_service_target` is not set. |
+| `custom_service_scheme` | No | `http` | Prometheus scrape scheme, usually `http` or `https`. |
+| `custom_service_metrics_path` | No | `/metrics` | Metrics endpoint path. |
+| `custom_service_scrape_interval` | No | `prometheus_scrape_interval` | Per-service scrape interval. |
+| `custom_service_scrape_timeout` | No | unset | Per-service scrape timeout. |
+| `custom_service_basic_auth_username` | No | unset | Basic Auth username. Requires password too. |
+| `custom_service_basic_auth_password` | No | unset | Basic Auth password. Store real values in Vault. |
+| `custom_service_bearer_token` | No | unset | Bearer token for token-authenticated exporters. Store real values in Vault. |
+| `custom_service_tls_insecure_skip_verify` | No | unset | Sets Prometheus `tls_config.insecure_skip_verify`. |
+| `custom_service_tls_ca_file` | No | unset | CA file path on the monitoring host. |
+| `custom_service_tls_cert_file` | No | unset | Client cert file path on the monitoring host. |
+| `custom_service_tls_key_file` | No | unset | Client key file path on the monitoring host. |
+| `custom_service_params` | No | unset | Query params passed to the scrape endpoint. Values should be YAML lists. |
+| `custom_service_labels` | No | unset | Extra labels added to this target. |
+| `prometheus_labels` | No | unset | Existing shared per-host labels; also applied to custom service targets. |
 
 ## Architecture notes
 

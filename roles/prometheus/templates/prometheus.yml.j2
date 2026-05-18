@@ -62,6 +62,64 @@ scrape_configs:
 {% endfor %}
 {% endif %}
 
+  # Custom services — exporters already exist on these hosts.
+  # Per-host options are read from inventory/host_vars/<host>.yml.
+{% if groups['custom_service'] is defined and groups['custom_service'] | length > 0 %}
+{% for host in groups['custom_service'] %}
+  - job_name: '{{ hostvars[host].custom_service_job_name | default("custom_service_" ~ host) }}'
+    scrape_interval: {{ hostvars[host].custom_service_scrape_interval | default(prometheus_scrape_interval) }}
+{% if hostvars[host].custom_service_scrape_timeout is defined %}
+    scrape_timeout: {{ hostvars[host].custom_service_scrape_timeout }}
+{% endif %}
+    scheme: {{ hostvars[host].custom_service_scheme | default('http') }}
+    metrics_path: {{ hostvars[host].custom_service_metrics_path | default('/metrics') }}
+{% if hostvars[host].custom_service_params is defined %}
+    params:
+{% for key, value in hostvars[host].custom_service_params.items() %}
+      {{ key }}: {{ value | to_json }}
+{% endfor %}
+{% endif %}
+{% if hostvars[host].custom_service_basic_auth_username is defined and hostvars[host].custom_service_basic_auth_password is defined %}
+    basic_auth:
+      username: '{{ hostvars[host].custom_service_basic_auth_username }}'
+      password: '{{ hostvars[host].custom_service_basic_auth_password }}'
+{% endif %}
+{% if hostvars[host].custom_service_bearer_token is defined %}
+    bearer_token: '{{ hostvars[host].custom_service_bearer_token }}'
+{% endif %}
+{% if hostvars[host].custom_service_tls_insecure_skip_verify is defined or hostvars[host].custom_service_tls_ca_file is defined or hostvars[host].custom_service_tls_cert_file is defined or hostvars[host].custom_service_tls_key_file is defined %}
+    tls_config:
+{% if hostvars[host].custom_service_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ hostvars[host].custom_service_tls_insecure_skip_verify | bool | lower }}
+{% endif %}
+{% if hostvars[host].custom_service_tls_ca_file is defined %}
+      ca_file: '{{ hostvars[host].custom_service_tls_ca_file }}'
+{% endif %}
+{% if hostvars[host].custom_service_tls_cert_file is defined %}
+      cert_file: '{{ hostvars[host].custom_service_tls_cert_file }}'
+{% endif %}
+{% if hostvars[host].custom_service_tls_key_file is defined %}
+      key_file: '{{ hostvars[host].custom_service_tls_key_file }}'
+{% endif %}
+{% endif %}
+    static_configs:
+      - targets:
+          - '{{ hostvars[host].custom_service_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].custom_service_port | default(9100))) }}'
+        labels:
+          hostname: '{{ host }}'
+{% if hostvars[host].prometheus_labels is defined %}
+{% for key, value in hostvars[host].prometheus_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
+{% if hostvars[host].custom_service_labels is defined %}
+{% for key, value in hostvars[host].custom_service_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
   # Proxmox VE — via prometheus-pve-exporter running on monitoring nodes
   # Multi-target pattern: one exporter instance queries all PVE nodes via API
 {% if groups['proxmox_nodes'] | length > 0 %}

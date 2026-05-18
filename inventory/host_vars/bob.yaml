@@ -1,0 +1,34 @@
+---
+# Example custom service exporter configuration.
+# This host already runs its own exporter; Ansible does not deploy one here.
+
+custom_service_job_name: custom_service_bob
+custom_service_port: 9100
+custom_service_scheme: http
+custom_service_metrics_path: /metrics
+custom_service_scrape_interval: 30s
+custom_service_scrape_timeout: 10s
+
+# Use these when the exporter requires HTTP Basic authentication.
+# Prefer moving real credentials to inventory/group_vars/all/vault.yml.
+# custom_service_basic_auth_username: "{{ vault_bob_exporter_username }}"
+# custom_service_basic_auth_password: "{{ vault_bob_exporter_password }}"
+
+# Use this instead of basic_auth when the exporter expects a bearer token.
+# custom_service_bearer_token: "{{ vault_bob_exporter_bearer_token }}"
+
+# Optional TLS settings for HTTPS exporters.
+# custom_service_scheme: https
+# custom_service_tls_insecure_skip_verify: false
+# custom_service_tls_ca_file: /etc/prometheus/certs/bob-ca.crt
+# custom_service_tls_cert_file: /etc/prometheus/certs/bob-client.crt
+# custom_service_tls_key_file: /etc/prometheus/certs/bob-client.key
+
+# Optional query parameters sent to the metrics endpoint.
+# custom_service_params:
+#   module:
+#     - default
+
+custom_service_labels:
+  service: bob
+  environment: custom

@@ -24,6 +24,7 @@ scrape_configs:
 
   # Prometheus scrapes itself
   - job_name: prometheus
+    scrape_interval: 15s
     static_configs:
       - targets:
           - 'localhost:9090'
@@ -338,6 +339,7 @@ scrape_configs:
 
   # Alertmanager self-monitoring
   - job_name: alertmanager
+    scrape_interval: 15s
     static_configs:
       - targets:
 {% for host in groups['monitoring'] %}
@@ -346,6 +348,7 @@ scrape_configs:
 
   # Grafana self-monitoring
   - job_name: grafana
+    scrape_interval: 30s
     static_configs:
       - targets:
 {% for host in groups['monitoring'] %}

@@ -50,6 +50,36 @@
     mode: '0640'
   notify: Restart snmp_exporter
 
+- name: Check if snmp_exporter basic auth is configured
+  ansible.builtin.set_fact:
+    snmp_exporter_basic_auth_enabled: >-
+      {{
+        groups['snmp_switches'] | default([]) |
+        map('extract', hostvars) |
+        selectattr('snmp_basic_auth_username', 'defined') |
+        selectattr('snmp_basic_auth_password_hash', 'defined') |
+        list |
+        length > 0
+      }}
+
+- name: Render snmp_exporter web config
+  ansible.builtin.template:
+    src: web.yml.j2
+    dest: /etc/snmp_exporter/web.yml
+    owner: snmp_exporter
+    group: snmp_exporter
+    mode: '0640'
+  no_log: true
+  notify: Restart snmp_exporter
+  when: snmp_exporter_basic_auth_enabled | bool
+
+- name: Remove snmp_exporter web config when basic auth is disabled
+  ansible.builtin.file:
+    path: /etc/snmp_exporter/web.yml
+    state: absent
+  notify: Restart snmp_exporter
+  when: not snmp_exporter_basic_auth_enabled | bool
+
 - name: Deploy snmp_exporter systemd unit
   ansible.builtin.template:
     src: snmp_exporter.service.j2

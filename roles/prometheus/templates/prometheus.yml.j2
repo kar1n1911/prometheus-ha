@@ -38,6 +38,29 @@ scrape_configs:
 {% endif %}
     scheme: {{ hostvars[host].node_exporter_scheme | default('http') }}
     metrics_path: {{ hostvars[host].node_exporter_metrics_path | default('/metrics') }}
+{% if hostvars[host].node_exporter_bearer_token is defined %}
+    bearer_token: '{{ hostvars[host].node_exporter_bearer_token }}'
+{% endif %}
+{% if hostvars[host].node_exporter_basic_auth_username is defined and hostvars[host].node_exporter_basic_auth_password is defined %}
+    basic_auth:
+      username: '{{ hostvars[host].node_exporter_basic_auth_username }}'
+      password: '{{ hostvars[host].node_exporter_basic_auth_password }}'
+{% endif %}
+{% if hostvars[host].node_exporter_tls_insecure_skip_verify is defined or hostvars[host].node_exporter_tls_ca_file is defined or hostvars[host].node_exporter_tls_cert_file is defined or hostvars[host].node_exporter_tls_key_file is defined %}
+    tls_config:
+{% if hostvars[host].node_exporter_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ hostvars[host].node_exporter_tls_insecure_skip_verify | bool | lower }}
+{% endif %}
+{% if hostvars[host].node_exporter_tls_ca_file is defined %}
+      ca_file: '{{ hostvars[host].node_exporter_tls_ca_file }}'
+{% endif %}
+{% if hostvars[host].node_exporter_tls_cert_file is defined %}
+      cert_file: '{{ hostvars[host].node_exporter_tls_cert_file }}'
+{% endif %}
+{% if hostvars[host].node_exporter_tls_key_file is defined %}
+      key_file: '{{ hostvars[host].node_exporter_tls_key_file }}'
+{% endif %}
+{% endif %}
     static_configs:
       - targets:
           - '{{ hostvars[host].node_exporter_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].node_exporter_port | default(node_exporter_port))) }}'
@@ -66,6 +89,29 @@ scrape_configs:
 {% endif %}
     scheme: {{ hostvars[host].postgres_exporter_scheme | default('http') }}
     metrics_path: {{ hostvars[host].postgres_exporter_metrics_path | default('/metrics') }}
+{% if hostvars[host].postgres_exporter_bearer_token is defined %}
+    bearer_token: '{{ hostvars[host].postgres_exporter_bearer_token }}'
+{% endif %}
+{% if hostvars[host].postgres_exporter_basic_auth_username is defined and hostvars[host].postgres_exporter_basic_auth_password is defined %}
+    basic_auth:
+      username: '{{ hostvars[host].postgres_exporter_basic_auth_username }}'
+      password: '{{ hostvars[host].postgres_exporter_basic_auth_password }}'
+{% endif %}
+{% if hostvars[host].postgres_exporter_tls_insecure_skip_verify is defined or hostvars[host].postgres_exporter_tls_ca_file is defined or hostvars[host].postgres_exporter_tls_cert_file is defined or hostvars[host].postgres_exporter_tls_key_file is defined %}
+    tls_config:
+{% if hostvars[host].postgres_exporter_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ hostvars[host].postgres_exporter_tls_insecure_skip_verify | bool | lower }}
+{% endif %}
+{% if hostvars[host].postgres_exporter_tls_ca_file is defined %}
+      ca_file: '{{ hostvars[host].postgres_exporter_tls_ca_file }}'
+{% endif %}
+{% if hostvars[host].postgres_exporter_tls_cert_file is defined %}
+      cert_file: '{{ hostvars[host].postgres_exporter_tls_cert_file }}'
+{% endif %}
+{% if hostvars[host].postgres_exporter_tls_key_file is defined %}
+      key_file: '{{ hostvars[host].postgres_exporter_tls_key_file }}'
+{% endif %}
+{% endif %}
     static_configs:
       - targets:
           - '{{ hostvars[host].postgres_exporter_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].postgres_exporter_port | default(postgres_exporter_port))) }}'
@@ -190,6 +236,29 @@ scrape_configs:
 {% endif %}
     scheme: {{ hostvars[host].maas_scheme | default('http') }}
     metrics_path: {{ hostvars[host].maas_metrics_path | default('/MAAS/metrics') }}
+{% if hostvars[host].maas_bearer_token is defined %}
+    bearer_token: '{{ hostvars[host].maas_bearer_token }}'
+{% endif %}
+{% if hostvars[host].maas_basic_auth_username is defined and hostvars[host].maas_basic_auth_password is defined %}
+    basic_auth:
+      username: '{{ hostvars[host].maas_basic_auth_username }}'
+      password: '{{ hostvars[host].maas_basic_auth_password }}'
+{% endif %}
+{% if hostvars[host].maas_tls_insecure_skip_verify is defined or hostvars[host].maas_tls_ca_file is defined or hostvars[host].maas_tls_cert_file is defined or hostvars[host].maas_tls_key_file is defined %}
+    tls_config:
+{% if hostvars[host].maas_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ hostvars[host].maas_tls_insecure_skip_verify | bool | lower }}
+{% endif %}
+{% if hostvars[host].maas_tls_ca_file is defined %}
+      ca_file: '{{ hostvars[host].maas_tls_ca_file }}'
+{% endif %}
+{% if hostvars[host].maas_tls_cert_file is defined %}
+      cert_file: '{{ hostvars[host].maas_tls_cert_file }}'
+{% endif %}
+{% if hostvars[host].maas_tls_key_file is defined %}
+      key_file: '{{ hostvars[host].maas_tls_key_file }}'
+{% endif %}
+{% endif %}
     static_configs:
       - targets:
           - '{{ hostvars[host].maas_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].maas_port | default(5240))) }}'
@@ -216,6 +285,29 @@ scrape_configs:
     scrape_interval: {{ hostvars[host].snmp_scrape_interval | default(snmp_scrape_interval) }}
     scrape_timeout: {{ hostvars[host].snmp_scrape_timeout | default(snmp_scrape_timeout) }}
     metrics_path: /snmp
+{% if hostvars[host].snmp_bearer_token is defined %}
+    bearer_token: '{{ hostvars[host].snmp_bearer_token }}'
+{% endif %}
+{% if hostvars[host].snmp_basic_auth_username is defined and hostvars[host].snmp_basic_auth_password is defined %}
+    basic_auth:
+      username: '{{ hostvars[host].snmp_basic_auth_username }}'
+      password: '{{ hostvars[host].snmp_basic_auth_password }}'
+{% endif %}
+{% if hostvars[host].snmp_tls_insecure_skip_verify is defined or hostvars[host].snmp_tls_ca_file is defined or hostvars[host].snmp_tls_cert_file is defined or hostvars[host].snmp_tls_key_file is defined %}
+    tls_config:
+{% if hostvars[host].snmp_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ hostvars[host].snmp_tls_insecure_skip_verify | bool | lower }}
+{% endif %}
+{% if hostvars[host].snmp_tls_ca_file is defined %}
+      ca_file: '{{ hostvars[host].snmp_tls_ca_file }}'
+{% endif %}
+{% if hostvars[host].snmp_tls_cert_file is defined %}
+      cert_file: '{{ hostvars[host].snmp_tls_cert_file }}'
+{% endif %}
+{% if hostvars[host].snmp_tls_key_file is defined %}
+      key_file: '{{ hostvars[host].snmp_tls_key_file }}'
+{% endif %}
+{% endif %}
     params:
       module: ['{{ hostvars[host].snmp_module_name | default(snmp_module_name) }}']
       auth: ['{{ hostvars[host].snmp_auth_name | default("v2_public") }}']

@@ -1,0 +1,3 @@
+---
+basic_auth_users:
+  {{ node_exporter_basic_auth_username | to_json }}: "{{ node_exporter_basic_auth_password_hash | default(node_exporter_basic_auth_generated_password_hash) }}"

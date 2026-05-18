@@ -7,6 +7,13 @@ maas_port: 5240
 maas_scheme: http
 maas_metrics_path: /MAAS/metrics
 maas_scrape_interval: 15s
+# maas_basic_auth_username: "{{ vault_maas_username }}"
+# maas_basic_auth_password: "{{ vault_maas_password }}"
+# maas_bearer_token: "{{ vault_maas_bearer_token }}"
+# maas_tls_insecure_skip_verify: false
+# maas_tls_ca_file: /etc/prometheus/certs/maas-ca.crt
+# maas_tls_cert_file: /etc/prometheus/certs/maas-client.crt
+# maas_tls_key_file: /etc/prometheus/certs/maas-client.key
 
 maas_labels:
   service: maas

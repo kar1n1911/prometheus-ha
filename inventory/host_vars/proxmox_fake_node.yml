@@ -1,9 +1,10 @@
 ---
 # Proxmox scrape configuration.
 # The pve_exporter runs on monitoring nodes and queries this target remotely.
+# proxmox_module_name must match a key in proxmox_api_credentials.
 
 proxmox_job_name: proxmox_fake_node
-proxmox_module_name: default
+proxmox_module_name: proxmox_fake_node
 proxmox_cluster: "1"
 proxmox_node: "1"
 proxmox_metrics_path: /pve

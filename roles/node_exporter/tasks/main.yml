@@ -27,6 +27,27 @@
     state: present
   when: ansible_os_family == "RedHat"
 
+- name: Ensure htpasswd tooling is installed for generated node_exporter basic auth on Debian-family hosts
+  ansible.builtin.apt:
+    name: apache2-utils
+    state: present
+    update_cache: true
+  when:
+    - ansible_os_family == "Debian"
+    - node_exporter_basic_auth_username is defined
+    - node_exporter_basic_auth_password is defined
+    - node_exporter_basic_auth_password_hash is not defined
+
+- name: Ensure htpasswd tooling is installed for generated node_exporter basic auth on RedHat-family hosts
+  ansible.builtin.dnf:
+    name: httpd-tools
+    state: present
+  when:
+    - ansible_os_family == "RedHat"
+    - node_exporter_basic_auth_username is defined
+    - node_exporter_basic_auth_password is defined
+    - node_exporter_basic_auth_password_hash is not defined
+
 - name: Download node_exporter with curl (workaround for get_url TLS client issue)
   ansible.builtin.command:
     cmd: >-
@@ -52,6 +73,81 @@
     mode: '0755'
     remote_src: true
   notify: Restart node_exporter
+
+- name: Create node_exporter config directory
+  ansible.builtin.file:
+    path: /etc/node_exporter
+    state: directory
+    owner: node_exporter
+    group: node_exporter
+    mode: '0750'
+  when: node_exporter_basic_auth_username is defined and (node_exporter_basic_auth_password is defined or node_exporter_basic_auth_password_hash is defined)
+
+- name: Check existing node_exporter web config
+  ansible.builtin.stat:
+    path: /etc/node_exporter/web.yml
+  register: node_exporter_web_config_stat
+  when:
+    - node_exporter_basic_auth_username is defined
+    - node_exporter_basic_auth_password is defined
+    - node_exporter_basic_auth_password_hash is not defined
+
+- name: Generate node_exporter basic auth bcrypt hash
+  ansible.builtin.command:
+    argv:
+      - htpasswd
+      - -nbB
+      - -C
+      - "{{ node_exporter_basic_auth_bcrypt_cost | default(12) | string }}"
+      - "{{ node_exporter_basic_auth_username }}"
+      - "{{ node_exporter_basic_auth_password }}"
+  register: node_exporter_basic_auth_generated
+  changed_when: false
+  no_log: true
+  when:
+    - node_exporter_basic_auth_username is defined
+    - node_exporter_basic_auth_password is defined
+    - node_exporter_basic_auth_password_hash is not defined
+    - node_exporter_basic_auth_force_regenerate | default(false) | bool or not node_exporter_web_config_stat.stat.exists
+
+- name: Store generated node_exporter basic auth bcrypt hash
+  ansible.builtin.set_fact:
+    node_exporter_basic_auth_generated_password_hash: "{{ node_exporter_basic_auth_generated.stdout.split(':', 1)[1] }}"
+  no_log: true
+  when:
+    - node_exporter_basic_auth_generated is not skipped
+
+- name: Deploy node_exporter web config from provided bcrypt hash
+  ansible.builtin.template:
+    src: web.yml.j2
+    dest: /etc/node_exporter/web.yml
+    owner: node_exporter
+    group: node_exporter
+    mode: '0640'
+  no_log: true
+  notify: Restart node_exporter
+  when:
+    - node_exporter_basic_auth_username is defined
+    - node_exporter_basic_auth_password_hash is defined
+
+- name: Deploy node_exporter web config from generated bcrypt hash
+  ansible.builtin.template:
+    src: web.yml.j2
+    dest: /etc/node_exporter/web.yml
+    owner: node_exporter
+    group: node_exporter
+    mode: '0640'
+  no_log: true
+  notify: Restart node_exporter
+  when:
+    - node_exporter_basic_auth_generated_password_hash is defined
+
+- name: Remove node_exporter web config when basic auth is disabled
+  ansible.builtin.file:
+    path: /etc/node_exporter/web.yml
+    state: absent
+  notify: Restart node_exporter
+  when: node_exporter_basic_auth_username is not defined
 
 - name: Deploy node_exporter systemd unit
   ansible.builtin.template:

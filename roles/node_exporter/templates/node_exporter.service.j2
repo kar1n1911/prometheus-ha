@@ -10,6 +10,9 @@ User=node_exporter
 Group=node_exporter
 ExecStart=/usr/local/bin/node_exporter \
   --web.listen-address=0.0.0.0:{{ node_exporter_port }} \
+{% if node_exporter_basic_auth_username is defined and (node_exporter_basic_auth_password is defined or node_exporter_basic_auth_password_hash is defined) %}
+  --web.config.file=/etc/node_exporter/web.yml \
+{% endif %}
   --collector.systemd \
   --collector.processes
 Restart=on-failure

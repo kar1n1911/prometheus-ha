@@ -56,8 +56,9 @@ are placeholders — replace with your actual host addresses.
 For each scrape target, keep target-specific scrape settings in
 `inventory/host_vars/<host>.yml`.
 For database hosts, also set `postgres_exporter_dsn` in the host_vars file.
-For Proxmox, set `proxmox_api_token_value` globally (store in Ansible Vault —
-see below) and keep per-node scrape settings in host_vars.
+For Proxmox, keep per-node scrape settings in host_vars and keep API token
+credentials in `inventory/group_vars/all/main.yml` with secret token values
+coming from Vault.
 For services that already expose their own Prometheus exporter, add them to
 `custom_service` and configure scraping in `inventory/host_vars/<host>.yml`.
 
@@ -86,7 +87,7 @@ ansible-vault create inventory/group_vars/all/vault.yml
 
 # Inside vault.yml:
 vault_grafana_admin_password: "your-secure-password"
-vault_proxmox_api_token_value: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+vault_proxmox_fake_node_api_token_value: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 vault_postgres_exporter_password: "exporterpassword"
 vault_alertmanager_smtp_auth_username: "youraccount@gmail.com"
 vault_alertmanager_smtp_auth_password: "your-gmail-app-password"
@@ -95,7 +96,12 @@ vault_alertmanager_smtp_auth_password: "your-gmail-app-password"
 Reference in `group_vars/all/main.yml`:
 ```yaml
 grafana_admin_password: "{{ vault_grafana_admin_password }}"
-proxmox_api_token_value: "{{ vault_proxmox_api_token_value }}"
+proxmox_api_credentials:
+  proxmox_fake_node:
+    user: "prometheus@pve"
+    token_name: "monitoring"
+    token_value: "{{ vault_proxmox_fake_node_api_token_value }}"
+    verify_ssl: false
 alertmanager_smtp_auth_username: "{{ vault_alertmanager_smtp_auth_username }}"
 alertmanager_smtp_auth_password: "{{ vault_alertmanager_smtp_auth_password }}"
 ```
@@ -166,10 +172,59 @@ node_exporter_scheme: http
 node_exporter_metrics_path: /metrics
 node_exporter_scrape_interval: 15s
 # node_exporter_scrape_timeout: 10s
+# node_exporter_basic_auth_username: "{{ vault_pNode1_node_exporter_username }}"
+# node_exporter_basic_auth_password: "{{ vault_pNode1_node_exporter_password }}"
+# node_exporter_basic_auth_password_hash: "{{ vault_pNode1_node_exporter_password_hash }}"
+# node_exporter_bearer_token: "{{ vault_pNode1_node_exporter_bearer_token }}"
+# node_exporter_tls_insecure_skip_verify: false
+# node_exporter_tls_ca_file: /etc/prometheus/certs/pNode1-node-exporter-ca.crt
+# node_exporter_tls_cert_file: /etc/prometheus/certs/pNode1-node-exporter-client.crt
+# node_exporter_tls_key_file: /etc/prometheus/certs/pNode1-node-exporter-client.key
 
 node_exporter_labels:
   role: linux
 ```
+
+When `node_exporter_basic_auth_username` is defined with either
+`node_exporter_basic_auth_password` or `node_exporter_basic_auth_password_hash`,
+the `node_exporter` role automatically:
+
+- creates `/etc/node_exporter/web.yml`
+- adds `--web.config.file=/etc/node_exporter/web.yml` to the systemd unit
+- restarts `node_exporter`
+
+Recommended pNode1 setup:
+
+```yaml
+# inventory/host_vars/pNode1.yml
+node_exporter_basic_auth_username: "{{ vault_pNode1_node_exporter_username }}"
+node_exporter_basic_auth_password_hash: "{{ vault_pNode1_node_exporter_password_hash }}"
+```
+
+Generate the bcrypt hash on any machine with `htpasswd`:
+
+```bash
+htpasswd -nBC 12 prometheus
+```
+
+Put the username and hash in Vault:
+
+```yaml
+vault_pNode1_node_exporter_username: prometheus
+vault_pNode1_node_exporter_password_hash: "$2y$12$..."
+```
+
+The role also supports this simpler form:
+
+```yaml
+node_exporter_basic_auth_username: "{{ vault_pNode1_node_exporter_username }}"
+node_exporter_basic_auth_password: "{{ vault_pNode1_node_exporter_password }}"
+```
+
+In that mode, the target host installs `htpasswd` tooling and generates
+`web.yml` the first time it is missing. To rotate a plaintext-managed password,
+set `node_exporter_basic_auth_force_regenerate: true` for one run or remove
+`/etc/node_exporter/web.yml` and rerun the role.
 
 For `postgres_servers`, use:
 
@@ -181,13 +236,21 @@ postgres_exporter_scheme: http
 postgres_exporter_metrics_path: /metrics
 postgres_exporter_scrape_interval: 15s
 # postgres_exporter_scrape_timeout: 10s
+# postgres_exporter_basic_auth_username: "{{ vault_pNode2_postgres_exporter_username }}"
+# postgres_exporter_basic_auth_password: "{{ vault_pNode2_postgres_exporter_password }}"
+# postgres_exporter_bearer_token: "{{ vault_pNode2_postgres_exporter_bearer_token }}"
+# postgres_exporter_tls_insecure_skip_verify: false
+# postgres_exporter_tls_ca_file: /etc/prometheus/certs/pNode2-postgres-exporter-ca.crt
+# postgres_exporter_tls_cert_file: /etc/prometheus/certs/pNode2-postgres-exporter-client.crt
+# postgres_exporter_tls_key_file: /etc/prometheus/certs/pNode2-postgres-exporter-client.key
 ```
 
 For `proxmox_nodes`, use:
 
 ```yaml
+# proxmox_module_name must match a key in proxmox_api_credentials.
 proxmox_job_name: proxmox_fake_node
-proxmox_module_name: default
+proxmox_module_name: proxmox_fake_node
 proxmox_cluster: "1"
 proxmox_node: "1"
 proxmox_metrics_path: /pve
@@ -204,6 +267,170 @@ maas_scheme: http
 maas_metrics_path: /MAAS/metrics
 maas_scrape_interval: 15s
 # maas_scrape_timeout: 10s
+# maas_basic_auth_username: "{{ vault_maas_username }}"
+# maas_basic_auth_password: "{{ vault_maas_password }}"
+# maas_bearer_token: "{{ vault_maas_bearer_token }}"
+# maas_tls_insecure_skip_verify: false
+# maas_tls_ca_file: /etc/prometheus/certs/maas-ca.crt
+# maas_tls_cert_file: /etc/prometheus/certs/maas-client.crt
+# maas_tls_key_file: /etc/prometheus/certs/maas-client.key
+```
+
+For `snmp_switches`, use:
+
+```yaml
+snmp_job_name: snmp_zs4128_a
+snmp_module_name: if_mib
+snmp_auth_name: v2_public
+snmp_scrape_interval: 1h
+snmp_scrape_timeout: 30s
+# snmp_basic_auth_username: "{{ vault_zs4128_a_snmp_exporter_username }}"
+# snmp_basic_auth_password: "{{ vault_zs4128_a_snmp_exporter_password }}"
+# snmp_basic_auth_password_hash: "{{ vault_zs4128_a_snmp_exporter_password_hash }}"
+# snmp_bearer_token: "{{ vault_zs4128_a_snmp_exporter_bearer_token }}"
+# snmp_tls_insecure_skip_verify: false
+# snmp_tls_ca_file: /etc/prometheus/certs/snmp-exporter-ca.crt
+# snmp_tls_cert_file: /etc/prometheus/certs/snmp-exporter-client.crt
+# snmp_tls_key_file: /etc/prometheus/certs/snmp-exporter-client.key
+```
+
+Most scrape target types support the same three HTTP authentication patterns:
+
+- `*_basic_auth_username` and `*_basic_auth_password`
+- `*_bearer_token`
+- `*_tls_*` client/CA settings
+
+For `snmp_exporter` Basic Auth, define both plaintext and hash values:
+
+```yaml
+# inventory/host_vars/zs4128-a.yml
+snmp_basic_auth_username: "{{ vault_zs4128_a_snmp_exporter_username }}"
+snmp_basic_auth_password: "{{ vault_zs4128_a_snmp_exporter_password }}"
+snmp_basic_auth_password_hash: "{{ vault_zs4128_a_snmp_exporter_password_hash }}"
+```
+
+The plaintext password is used by Prometheus when scraping `snmp_exporter`.
+The bcrypt hash is used by the `snmp_exporter` role to generate
+`/etc/snmp_exporter/web.yml` on monitoring nodes. The role collects all
+`snmp_basic_auth_username`/`snmp_basic_auth_password_hash` pairs from
+`groups['snmp_switches']`.
+
+Generate the hash with:
+
+```bash
+htpasswd -nBC 12 prometheus
+```
+
+Then store both in Vault:
+
+```yaml
+vault_zs4128_a_snmp_exporter_username: prometheus
+vault_zs4128_a_snmp_exporter_password: "plain-password-used-by-prometheus"
+vault_zs4128_a_snmp_exporter_password_hash: "$2y$12$..."
+```
+
+Proxmox is the exception: Prometheus scrapes the local `pve_exporter`, and
+`pve_exporter` authenticates to Proxmox using the Proxmox API token configured in
+`proxmox_api_credentials`. The `proxmox_module_name` in each host_vars file must
+match one key in that group-vars map.
+
+For multiple Proxmox servers with different API tokens:
+
+```yaml
+# inventory/group_vars/all/main.yml
+proxmox_api_credentials:
+  pve_site_a:
+    user: "prometheus@pve"
+    token_name: "monitoring-a"
+    token_value: "{{ vault_pve_site_a_api_token_value }}"
+    verify_ssl: false
+  pve_site_b:
+    user: "prometheus@pve"
+    token_name: "monitoring-b"
+    token_value: "{{ vault_pve_site_b_api_token_value }}"
+    verify_ssl: true
+```
+
+```yaml
+# inventory/host_vars/pve-site-a.yml
+proxmox_module_name: pve_site_a
+```
+
+```yaml
+# inventory/host_vars/pve-site-b.yml
+proxmox_module_name: pve_site_b
+```
+
+The `*_bearer_token` values make Prometheus send an HTTP header like:
+
+```text
+Authorization: Bearer <token>
+```
+
+Store real token values in `inventory/group_vars/all/vault.yml`, not directly
+in host_vars.
+
+Important: the token in Prometheus only sends credentials. The exporter endpoint
+must also be configured to validate that token. Many Prometheus exporters,
+including common node/postgres/snmp exporter setups, do not enforce arbitrary
+API bearer tokens by default. In practice, use one of these patterns:
+
+- Put the exporter behind a reverse proxy that validates bearer tokens.
+- Use exporter-supported web auth where available, commonly TLS or Basic Auth.
+- Restrict exporter ports with firewall rules so only monitoring nodes can
+  connect.
+
+Bearer-token/API-token flow:
+
+1. Store the token in Vault, for example
+   `vault_zs4128_a_snmp_exporter_bearer_token`.
+2. Reference it from host_vars as `snmp_bearer_token`.
+3. Run `playbooks/update-prometheus-config.yml` so Prometheus sends
+   `Authorization: Bearer <token>`.
+4. Configure the exporter endpoint to validate that token. For exporters that
+   do not validate bearer tokens themselves, put Nginx/HAProxy/Caddy in front
+   of the exporter and validate the header there.
+
+TLS client-certificate flow:
+
+1. Issue a CA, server certificate for the exporter endpoint, and optionally a
+   client certificate for Prometheus.
+2. Install the CA/client files on every monitoring node at the paths referenced
+   by host_vars, for example `snmp_tls_ca_file`, `snmp_tls_cert_file`, and
+   `snmp_tls_key_file`.
+3. Change the scrape scheme to `https` when the exporter endpoint serves TLS.
+4. Configure the exporter endpoint, or a reverse proxy in front of it, to use
+   the server certificate and require/verify client certificates if using mTLS.
+5. Run `playbooks/update-prometheus-config.yml` to render Prometheus
+   `tls_config`.
+
+For SNMP specifically, these HTTP authentication settings protect access to the
+`snmp_exporter` HTTP endpoint on the monitoring nodes. They do not replace the
+SNMP v2/v3 credentials used by `snmp_exporter` to probe the switch; those remain
+controlled by `snmp_auth_name` and `roles/snmp_exporter/templates/snmp.yml.j2`.
+
+Manual checks look like this:
+
+```bash
+# Bearer token
+curl -H "Authorization: Bearer ${TOKEN}" http://10.8.50.58:9100/metrics
+
+# Basic Auth
+curl -u "${USER}:${PASSWORD}" http://10.8.50.54:9187/metrics
+
+# TLS with a trusted CA and optional client certificate
+curl --cacert /etc/prometheus/certs/exporter-ca.crt \
+  --cert /etc/prometheus/certs/exporter-client.crt \
+  --key /etc/prometheus/certs/exporter-client.key \
+  https://10.8.50.58:9100/metrics
+
+# pve_exporter running on a monitoring node and querying a Proxmox target.
+# The module name selects the API token block from proxmox_api_credentials.
+curl "http://127.0.0.1:9221/pve?target=10.0.1.226&module=proxmox_fake_node&cluster=1&node=1"
+
+# snmp_exporter running on a monitoring node and probing a switch
+curl -H "Authorization: Bearer ${TOKEN}" \
+  "http://127.0.0.1:9116/snmp?target=10.8.50.202&module=if_mib&auth=v2_public"
 ```
 
 ### 5.2 Deploy only HAProxy frontend

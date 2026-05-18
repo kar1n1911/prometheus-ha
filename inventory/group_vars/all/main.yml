@@ -45,6 +45,12 @@ postgres_exporter_password: "{{ vault_postgres_exporter_password | default('CHAN
 proxmox_exporter_port: 9221
 proxmox_api_token_value: "{{ vault_proxmox_api_token_value }}"
 proxmox_verify_ssl: false
+proxmox_api_credentials:
+  proxmox_fake_node:
+    user: "{{ proxmox_api_user | default('prometheus@pve') }}"
+    token_name: "{{ proxmox_api_token_name | default('monitoring') }}"
+    token_value: "{{ vault_proxmox_fake_node_api_token_value | default(proxmox_api_token_value) }}"
+    verify_ssl: "{{ proxmox_verify_ssl }}"
 
 # --- SNMP exporter settings ---
 snmp_exporter_version: "0.27.0"

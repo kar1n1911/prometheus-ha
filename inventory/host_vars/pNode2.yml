@@ -9,6 +9,14 @@ node_exporter_port: 9100
 node_exporter_scheme: http
 node_exporter_metrics_path: /metrics
 node_exporter_scrape_interval: 15s
+# node_exporter_basic_auth_username: "{{ vault_pNode2_node_exporter_username }}"
+# node_exporter_basic_auth_password: "{{ vault_pNode2_node_exporter_password }}"
+# node_exporter_basic_auth_password_hash: "{{ vault_pNode2_node_exporter_password_hash }}"
+# node_exporter_bearer_token: "{{ vault_pNode2_node_exporter_bearer_token }}"
+# node_exporter_tls_insecure_skip_verify: false
+# node_exporter_tls_ca_file: /etc/prometheus/certs/pNode2-node-exporter-ca.crt
+# node_exporter_tls_cert_file: /etc/prometheus/certs/pNode2-node-exporter-client.crt
+# node_exporter_tls_key_file: /etc/prometheus/certs/pNode2-node-exporter-client.key
 
 postgres_exporter_dsn: "postgresql://exporter:{{ postgres_exporter_password }}@localhost:5432/postgres?sslmode=disable"
 
@@ -17,3 +25,10 @@ postgres_exporter_port: 9187
 postgres_exporter_scheme: http
 postgres_exporter_metrics_path: /metrics
 postgres_exporter_scrape_interval: 15s
+# postgres_exporter_basic_auth_username: "{{ vault_pNode2_postgres_exporter_username }}"
+# postgres_exporter_basic_auth_password: "{{ vault_pNode2_postgres_exporter_password }}"
+# postgres_exporter_bearer_token: "{{ vault_pNode2_postgres_exporter_bearer_token }}"
+# postgres_exporter_tls_insecure_skip_verify: false
+# postgres_exporter_tls_ca_file: /etc/prometheus/certs/pNode2-postgres-exporter-ca.crt
+# postgres_exporter_tls_cert_file: /etc/prometheus/certs/pNode2-postgres-exporter-client.crt
+# postgres_exporter_tls_key_file: /etc/prometheus/certs/pNode2-postgres-exporter-client.key

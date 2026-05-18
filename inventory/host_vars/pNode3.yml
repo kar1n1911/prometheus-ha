@@ -6,6 +6,14 @@ node_exporter_port: 9100
 node_exporter_scheme: http
 node_exporter_metrics_path: /metrics
 node_exporter_scrape_interval: 15s
+# node_exporter_basic_auth_username: "{{ vault_pNode3_node_exporter_username }}"
+# node_exporter_basic_auth_password: "{{ vault_pNode3_node_exporter_password }}"
+# node_exporter_basic_auth_password_hash: "{{ vault_pNode3_node_exporter_password_hash }}"
+# node_exporter_bearer_token: "{{ vault_pNode3_node_exporter_bearer_token }}"
+# node_exporter_tls_insecure_skip_verify: false
+# node_exporter_tls_ca_file: /etc/prometheus/certs/pNode3-node-exporter-ca.crt
+# node_exporter_tls_cert_file: /etc/prometheus/certs/pNode3-node-exporter-client.crt
+# node_exporter_tls_key_file: /etc/prometheus/certs/pNode3-node-exporter-client.key
 
 node_exporter_labels:
   role: linux

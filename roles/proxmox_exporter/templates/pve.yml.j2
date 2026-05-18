@@ -4,8 +4,18 @@
 #   Datacenter -> Permissions -> API Tokens -> Add
 #   Role: PVEAuditor (read-only)
 #   Privilege separation: yes
+{% if proxmox_api_credentials is defined %}
+{% for module_name, credentials in proxmox_api_credentials.items() %}
+{{ module_name }}:
+  user: "{{ credentials.user | default(proxmox_api_user | default('prometheus@pve')) }}"
+  token_name: "{{ credentials.token_name | default(proxmox_api_token_name | default('monitoring')) }}"
+  token_value: "{{ credentials.token_value | default(proxmox_api_token_value) }}"
+  verify_ssl: {{ credentials.verify_ssl | default(proxmox_verify_ssl | default(true)) | bool | lower }}
+{% endfor %}
+{% else %}
 default:
   user: "{{ proxmox_api_user | default('prometheus@pve') }}"
   token_name: "{{ proxmox_api_token_name | default('monitoring') }}"
   token_value: "{{ proxmox_api_token_value }}"
   verify_ssl: {{ proxmox_verify_ssl | default(true) | bool | lower }}
+{% endif %}

@@ -1,0 +1,9 @@
+---
+basic_auth_users:
+{% set snmp_basic_auth_seen_users = [] %}
+{% for host in groups['snmp_switches'] | default([]) %}
+{% if hostvars[host].snmp_basic_auth_username is defined and hostvars[host].snmp_basic_auth_password_hash is defined and hostvars[host].snmp_basic_auth_username not in snmp_basic_auth_seen_users %}
+  {{ hostvars[host].snmp_basic_auth_username | to_json }}: "{{ hostvars[host].snmp_basic_auth_password_hash }}"
+{% set _ = snmp_basic_auth_seen_users.append(hostvars[host].snmp_basic_auth_username) %}
+{% endif %}
+{% endfor %}

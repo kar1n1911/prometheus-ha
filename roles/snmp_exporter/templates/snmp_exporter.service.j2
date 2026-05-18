@@ -10,6 +10,15 @@ User=snmp_exporter
 Group=snmp_exporter
 ExecStart=/usr/local/bin/snmp_exporter \
   --config.file=/etc/snmp_exporter/snmp.yml \
+{% set snmp_exporter_web_auth = namespace(enabled=false) %}
+{% for host in groups['snmp_switches'] | default([]) %}
+{% if hostvars[host].snmp_basic_auth_username is defined and hostvars[host].snmp_basic_auth_password_hash is defined %}
+{% set snmp_exporter_web_auth.enabled = true %}
+{% endif %}
+{% endfor %}
+{% if snmp_exporter_web_auth.enabled %}
+  --web.config.file=/etc/snmp_exporter/web.yml \
+{% endif %}
   --web.listen-address=0.0.0.0:{{ snmp_exporter_port }}
 Restart=on-failure
 RestartSec=5s

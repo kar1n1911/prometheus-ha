@@ -7,6 +7,14 @@ snmp_module_name: if_mib
 snmp_auth_name: v2_public
 snmp_scrape_interval: 1h
 snmp_scrape_timeout: 30s
+# snmp_basic_auth_username: "{{ vault_zs4128_a_snmp_exporter_username }}"
+# snmp_basic_auth_password: "{{ vault_zs4128_a_snmp_exporter_password }}"
+# snmp_basic_auth_password_hash: "{{ vault_zs4128_a_snmp_exporter_password_hash }}"
+# snmp_bearer_token: "{{ vault_zs4128_a_snmp_exporter_bearer_token }}"
+# snmp_tls_insecure_skip_verify: false
+# snmp_tls_ca_file: /etc/prometheus/certs/snmp-exporter-ca.crt
+# snmp_tls_cert_file: /etc/prometheus/certs/snmp-exporter-client.crt
+# snmp_tls_key_file: /etc/prometheus/certs/snmp-exporter-client.key
 
 snmp_labels:
   device: zs4128-a

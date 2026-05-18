@@ -28,13 +28,19 @@ scrape_configs:
       - targets:
           - 'localhost:9090'
 
-  # Node Exporter — all Linux hosts in inventory
+  # Node Exporter — per-host options are read from inventory/host_vars/<host>.yml.
 {% if groups['linux_nodes'] | length > 0 %}
-  - job_name: node
-    static_configs:
 {% for host in groups['linux_nodes'] %}
+  - job_name: '{{ hostvars[host].node_exporter_job_name | default("node_" ~ host) }}'
+    scrape_interval: {{ hostvars[host].node_exporter_scrape_interval | default(prometheus_scrape_interval) }}
+{% if hostvars[host].node_exporter_scrape_timeout is defined %}
+    scrape_timeout: {{ hostvars[host].node_exporter_scrape_timeout }}
+{% endif %}
+    scheme: {{ hostvars[host].node_exporter_scheme | default('http') }}
+    metrics_path: {{ hostvars[host].node_exporter_metrics_path | default('/metrics') }}
+    static_configs:
       - targets:
-          - '{{ hostvars[host].ansible_host }}:{{ node_exporter_port }}'
+          - '{{ hostvars[host].node_exporter_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].node_exporter_port | default(node_exporter_port))) }}'
         labels:
           hostname: '{{ host }}'
 {% if hostvars[host].prometheus_labels is defined %}
@@ -42,20 +48,36 @@ scrape_configs:
           {{ key }}: '{{ value }}'
 {% endfor %}
 {% endif %}
+{% if hostvars[host].node_exporter_labels is defined %}
+{% for key, value in hostvars[host].node_exporter_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
 {% endfor %}
 {% endif %}
 
-  # PostgreSQL exporter — hosts in postgres_servers group
+  # PostgreSQL exporter — per-host options are read from inventory/host_vars/<host>.yml.
 {% if groups['postgres_servers'] | length > 0 %}
-  - job_name: postgres
-    static_configs:
 {% for host in groups['postgres_servers'] %}
+  - job_name: '{{ hostvars[host].postgres_exporter_job_name | default("postgres_" ~ host) }}'
+    scrape_interval: {{ hostvars[host].postgres_exporter_scrape_interval | default(prometheus_scrape_interval) }}
+{% if hostvars[host].postgres_exporter_scrape_timeout is defined %}
+    scrape_timeout: {{ hostvars[host].postgres_exporter_scrape_timeout }}
+{% endif %}
+    scheme: {{ hostvars[host].postgres_exporter_scheme | default('http') }}
+    metrics_path: {{ hostvars[host].postgres_exporter_metrics_path | default('/metrics') }}
+    static_configs:
       - targets:
-          - '{{ hostvars[host].ansible_host }}:{{ postgres_exporter_port }}'
+          - '{{ hostvars[host].postgres_exporter_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].postgres_exporter_port | default(postgres_exporter_port))) }}'
         labels:
           hostname: '{{ host }}'
 {% if hostvars[host].prometheus_labels is defined %}
 {% for key, value in hostvars[host].prometheus_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
+{% if hostvars[host].postgres_exporter_labels is defined %}
+{% for key, value in hostvars[host].postgres_exporter_labels.items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
 {% endif %}
@@ -120,20 +142,34 @@ scrape_configs:
 {% endfor %}
 {% endif %}
 
-  # Proxmox VE — via prometheus-pve-exporter running on monitoring nodes
-  # Multi-target pattern: one exporter instance queries all PVE nodes via API
+  # Proxmox VE — per-node options are read from inventory/host_vars/<host>.yml.
 {% if groups['proxmox_nodes'] | length > 0 %}
-  - job_name: proxmox
-    metrics_path: /pve
+{% for host in groups['proxmox_nodes'] %}
+  - job_name: '{{ hostvars[host].proxmox_job_name | default("proxmox_" ~ host) }}'
+    scrape_interval: {{ hostvars[host].proxmox_scrape_interval | default(prometheus_scrape_interval) }}
+{% if hostvars[host].proxmox_scrape_timeout is defined %}
+    scrape_timeout: {{ hostvars[host].proxmox_scrape_timeout }}
+{% endif %}
+    metrics_path: {{ hostvars[host].proxmox_metrics_path | default('/pve') }}
     params:
-      module: [default]
-      cluster: ['1']
-      node: ['1']
+      module: ['{{ hostvars[host].proxmox_module_name | default("default") }}']
+      cluster: ['{{ hostvars[host].proxmox_cluster | default("1") }}']
+      node: ['{{ hostvars[host].proxmox_node | default("1") }}']
     static_configs:
       - targets:
-{% for host in groups['proxmox_nodes'] %}
           - '{{ hostvars[host].ansible_host }}'
+        labels:
+          hostname: '{{ host }}'
+{% if hostvars[host].prometheus_labels is defined %}
+{% for key, value in hostvars[host].prometheus_labels.items() %}
+          {{ key }}: '{{ value }}'
 {% endfor %}
+{% endif %}
+{% if hostvars[host].proxmox_labels is defined %}
+{% for key, value in hostvars[host].proxmox_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -141,36 +177,63 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: 'localhost:{{ proxmox_exporter_port }}'
+{% endfor %}
 {% endif %}
 
-  # MAAS region controller — scraped directly, no separate exporter needed
+  # MAAS region controller — per-host options are read from inventory/host_vars/<host>.yml.
 {% if groups['maas_controllers'] | length > 0 %}
-  - job_name: maas
-    metrics_path: /MAAS/metrics
-    static_configs:
 {% for host in groups['maas_controllers'] %}
+  - job_name: '{{ hostvars[host].maas_job_name | default("maas_" ~ host) }}'
+    scrape_interval: {{ hostvars[host].maas_scrape_interval | default(prometheus_scrape_interval) }}
+{% if hostvars[host].maas_scrape_timeout is defined %}
+    scrape_timeout: {{ hostvars[host].maas_scrape_timeout }}
+{% endif %}
+    scheme: {{ hostvars[host].maas_scheme | default('http') }}
+    metrics_path: {{ hostvars[host].maas_metrics_path | default('/MAAS/metrics') }}
+    static_configs:
       - targets:
-          - '{{ hostvars[host].ansible_host }}:5240'
+          - '{{ hostvars[host].maas_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].maas_port | default(5240))) }}'
         labels:
           hostname: '{{ host }}'
+{% if hostvars[host].prometheus_labels is defined %}
+{% for key, value in hostvars[host].prometheus_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
+{% if hostvars[host].maas_labels is defined %}
+{% for key, value in hostvars[host].maas_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
 {% endfor %}
 {% endif %}
 
   # SNMP switches via snmp_exporter.
-  # Safety requirement: do not probe too frequently. Max 1 scrape per hour.
+  # Per-switch scrape options are read from inventory/host_vars/<host>.yml.
 {% if groups['snmp_switches'] is defined and groups['snmp_switches'] | length > 0 %}
-  - job_name: snmp_switches
-    scrape_interval: {{ snmp_scrape_interval }}
-    scrape_timeout: {{ snmp_scrape_timeout }}
+{% for host in groups['snmp_switches'] %}
+  - job_name: '{{ hostvars[host].snmp_job_name | default("snmp_" ~ host) }}'
+    scrape_interval: {{ hostvars[host].snmp_scrape_interval | default(snmp_scrape_interval) }}
+    scrape_timeout: {{ hostvars[host].snmp_scrape_timeout | default(snmp_scrape_timeout) }}
     metrics_path: /snmp
     params:
-      module: ['{{ snmp_module_name }}']
-      auth: ['v2_public']
+      module: ['{{ hostvars[host].snmp_module_name | default(snmp_module_name) }}']
+      auth: ['{{ hostvars[host].snmp_auth_name | default("v2_public") }}']
     static_configs:
       - targets:
-{% for host in groups['snmp_switches'] %}
           - '{{ hostvars[host].ansible_host }}'
+        labels:
+          hostname: '{{ host }}'
+{% if hostvars[host].prometheus_labels is defined %}
+{% for key, value in hostvars[host].prometheus_labels.items() %}
+          {{ key }}: '{{ value }}'
 {% endfor %}
+{% endif %}
+{% if hostvars[host].snmp_labels is defined %}
+{% for key, value in hostvars[host].snmp_labels.items() %}
+          {{ key }}: '{{ value }}'
+{% endfor %}
+{% endif %}
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -178,6 +241,7 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: 'localhost:{{ snmp_exporter_port }}'
+{% endfor %}
 {% endif %}
 
   # Alertmanager self-monitoring

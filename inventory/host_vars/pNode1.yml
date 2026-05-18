@@ -1,0 +1,11 @@
+---
+# Node exporter scrape configuration for pNode1.
+
+node_exporter_job_name: node_pNode1
+node_exporter_port: 9100
+node_exporter_scheme: http
+node_exporter_metrics_path: /metrics
+node_exporter_scrape_interval: 15s
+
+node_exporter_labels:
+  role: linux

@@ -1,0 +1,13 @@
+---
+# SNMP scrape configuration for zs4128-b.
+# The snmp_exporter runs on monitoring nodes; this switch is only probed.
+
+snmp_job_name: snmp_zs4128_b
+snmp_module_name: if_mib
+snmp_auth_name: v2_public
+snmp_scrape_interval: 1h
+snmp_scrape_timeout: 30s
+
+snmp_labels:
+  device: zs4128-b
+  role: switch

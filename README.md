@@ -15,10 +15,16 @@ prometheus-ha/
 │   │   │   └── vault.yml             # Encrypted secrets (Ansible Vault)
 │   │   └── monitoring.yml            # Monitoring-node-specific vars
 │   └── host_vars/
-│       ├── pNode2.yml                # Per-host labels and DSN
+│       ├── pNode1.yml                # Per-host Node Exporter scrape config
+│       ├── pNode2.yml                # Per-host labels, Node Exporter, and Postgres config
 │       ├── bob.yaml                  # Example custom_service scrape config
 │       ├── pNode3.yml
-│       └── pNode4.yml
+│       ├── pNode4.yml
+│       ├── maas_host.yml             # Per-host MAAS scrape config
+│       ├── proxmox_fake_node.yml     # Per-node Proxmox scrape config
+│       ├── zs4128-a.yml              # Per-switch SNMP scrape config
+│       ├── zs4128-b.yml
+│       └── zs4128-c.yml
 ├── roles/
 │   ├── prometheus/                   # Prometheus binary + config + rules
 │   ├── alertmanager/                 # Alertmanager + cluster config
@@ -47,8 +53,11 @@ prometheus-ha/
 Edit `inventory/hosts.yml` to reflect your environment. The IPs in the file
 are placeholders — replace with your actual host addresses.
 
-For database hosts, set `postgres_exporter_dsn` in `inventory/host_vars/<host>.yml`.
-For Proxmox, set `proxmox_api_token_value` (store in Ansible Vault — see below).
+For each scrape target, keep target-specific scrape settings in
+`inventory/host_vars/<host>.yml`.
+For database hosts, also set `postgres_exporter_dsn` in the host_vars file.
+For Proxmox, set `proxmox_api_token_value` globally (store in Ansible Vault —
+see below) and keep per-node scrape settings in host_vars.
 For services that already expose their own Prometheus exporter, add them to
 `custom_service` and configure scraping in `inventory/host_vars/<host>.yml`.
 
@@ -135,7 +144,69 @@ ansible-playbook playbooks/update-prometheus-config.yml
 
 That's it. No manual edits to `prometheus.yml`.
 
-### 5.1 Deploy only HAProxy frontend
+### 5.1 Per-target scrape configuration
+
+Prometheus scrape jobs are rendered from
+`roles/prometheus/templates/prometheus.yml.j2`. These inventory groups use
+per-host files under `inventory/host_vars/`:
+
+- `linux_nodes`
+- `postgres_servers`
+- `proxmox_nodes`
+- `maas_controllers`
+- `snmp_switches`
+- `custom_service`
+
+For `linux_nodes`, use:
+
+```yaml
+node_exporter_job_name: node_pNode1
+node_exporter_port: 9100
+node_exporter_scheme: http
+node_exporter_metrics_path: /metrics
+node_exporter_scrape_interval: 15s
+# node_exporter_scrape_timeout: 10s
+
+node_exporter_labels:
+  role: linux
+```
+
+For `postgres_servers`, use:
+
+```yaml
+postgres_exporter_dsn: "postgresql://exporter:{{ postgres_exporter_password }}@localhost:5432/postgres?sslmode=disable"
+postgres_exporter_job_name: postgres_pNode2
+postgres_exporter_port: 9187
+postgres_exporter_scheme: http
+postgres_exporter_metrics_path: /metrics
+postgres_exporter_scrape_interval: 15s
+# postgres_exporter_scrape_timeout: 10s
+```
+
+For `proxmox_nodes`, use:
+
+```yaml
+proxmox_job_name: proxmox_fake_node
+proxmox_module_name: default
+proxmox_cluster: "1"
+proxmox_node: "1"
+proxmox_metrics_path: /pve
+proxmox_scrape_interval: 15s
+# proxmox_scrape_timeout: 10s
+```
+
+For `maas_controllers`, use:
+
+```yaml
+maas_job_name: maas_host
+maas_port: 5240
+maas_scheme: http
+maas_metrics_path: /MAAS/metrics
+maas_scrape_interval: 15s
+# maas_scrape_timeout: 10s
+```
+
+### 5.2 Deploy only HAProxy frontend
 
 If you changed only HAProxy frontend settings:
 
@@ -143,7 +214,7 @@ If you changed only HAProxy frontend settings:
 ansible-playbook site.yml --limit haproxy --tags haproxy
 ```
 
-### 5.2 Add a custom service exporter
+### 5.3 Add a custom service exporter
 
 Use the `custom_service` inventory group for hosts that already run an exporter.
 This project does not deploy anything to those hosts; it only renders Prometheus
@@ -321,9 +392,31 @@ Two monitoring nodes is sufficient for this environment. For larger scale:
 ## SNMP switch metrics (rate-limited)
 
 SNMP targets are scraped through `snmp_exporter` running on monitoring nodes.
-To respect infrastructure limits, the `snmp_switches` job is configured with:
+Each switch is listed in `inventory/hosts.yml` under `snmp_switches`, and its
+scrape settings live in `inventory/host_vars/<switch>.yml`.
+
+Example:
+
+```yaml
+---
+snmp_job_name: snmp_zs4128_a
+snmp_module_name: if_mib
+snmp_auth_name: v2_public
+snmp_scrape_interval: 1h
+snmp_scrape_timeout: 30s
+
+snmp_labels:
+  device: zs4128-a
+  role: switch
+```
+
+To respect infrastructure limits, the current switch host_vars use:
 
 - `scrape_interval: 1h`
 - `scrape_timeout: 30s`
 
-Add/remove switches only in `inventory/hosts.yml` under `snmp_switches`.
+`snmp_auth_name` must reference an auth profile defined in the snmp_exporter
+configuration, such as `v2_public` or `v3_default`.
+
+Add/remove switches in `inventory/hosts.yml` under `snmp_switches`, and add a
+matching file in `inventory/host_vars/` for each switch.

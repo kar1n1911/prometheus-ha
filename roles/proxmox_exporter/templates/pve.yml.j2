@@ -8,4 +8,4 @@ default:
   user: "{{ proxmox_api_user | default('prometheus@pve') }}"
   token_name: "{{ proxmox_api_token_name | default('monitoring') }}"
   token_value: "{{ proxmox_api_token_value }}"
-  verify_ssl: "{{ proxmox_verify_ssl | default(true) }}"
+  verify_ssl: {{ proxmox_verify_ssl | default(true) | bool | lower }}

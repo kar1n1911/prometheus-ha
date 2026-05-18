@@ -26,6 +26,7 @@
   loop:
     - /opt/pve_exporter
     - /etc/pve_exporter
+    - /home/pve_exporter
 
 - name: Install prometheus-pve-exporter into virtualenv
   ansible.builtin.pip:

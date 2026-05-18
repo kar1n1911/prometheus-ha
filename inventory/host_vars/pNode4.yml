@@ -1,7 +1,0 @@
----
-prometheus_labels:
-  environment: production
-  role: database
-  datacenter: se-1
-
-postgres_exporter_dsn: "postgresql://exporter:{{ postgres_exporter_password }}@localhost:5432/postgres?sslmode=disable"

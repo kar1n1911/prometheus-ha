@@ -7,7 +7,7 @@ proxmox_module_name: default
 proxmox_cluster: "1"
 proxmox_node: "1"
 proxmox_metrics_path: /pve
-proxmox_scrape_interval: 15s
+proxmox_scrape_interval: 1m
 
 proxmox_labels:
   service: proxmox

@@ -6,7 +6,7 @@ maas_job_name: maas_host
 maas_port: 5240
 maas_scheme: http
 maas_metrics_path: /MAAS/metrics
-maas_scrape_interval: 15s
+maas_scrape_interval: 5m
 
 maas_labels:
   service: maas

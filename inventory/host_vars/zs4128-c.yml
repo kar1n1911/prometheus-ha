@@ -4,9 +4,15 @@
 
 snmp_job_name: snmp_zs4128_c
 snmp_module_name: if_mib
-snmp_auth_name: v2_public
+#snmp_auth_name: v2_public
 snmp_scrape_interval: 1h
 snmp_scrape_timeout: 30s
+#snmp_v2_community: "public"
+#snmp_v3_username: "snmpv3user"
+#snmp_v3_auth_protocol: "SHA"
+#snmp_v3_auth_password: "AuthP@ss123"
+#snmp_v3_priv_protocol: "AES"
+#snmp_v3_priv_password: "PrivP@ss123"
 # snmp_basic_auth_username: "{{ vault_zs4128_c_snmp_exporter_username }}"
 # snmp_basic_auth_password: "{{ vault_zs4128_c_snmp_exporter_password }}"
 # snmp_basic_auth_password_hash: "{{ vault_zs4128_c_snmp_exporter_password_hash }}"

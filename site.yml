@@ -17,14 +17,27 @@
   roles:
     - postgres_exporter
 
+- name: Deploy proxmox_exporter to monitoring platform
+  hosts: monitoring
+  gather_facts: true
+  tags: [ proxmox_exporter, exporters ]
+  roles:
+    - proxmox_exporter   # runs on monitoring nodes, queries PVE API
+    # as no proxmox monitor is configured or can be configured, we use a fake service.
+
+
+- name: Deploy snmp_exporter to monitoring platform
+  hosts: monitoring
+  gather_facts: true
+  tags: [ snmp_exporter, exporters ]
+  roles:
+    - snmp_exporter      # runs on monitoring nodes, queries switches via SNMP
+
 - name: Deploy monitoring platform (Prometheus, Alertmanager, Grafana)
   hosts: monitoring
   gather_facts: true
   tags: [monitoring_platform]
   roles:
-    - proxmox_exporter   # runs on monitoring nodes, queries PVE API
-                          # as no proxmox monitor is configured or can be configured, we use a fake service.
-    - snmp_exporter      # runs on monitoring nodes, queries switches via SNMP
     - prometheus
     - alertmanager
     - grafana

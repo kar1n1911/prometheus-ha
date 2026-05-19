@@ -241,7 +241,7 @@ scrape_configs:
 {% endif %}
     static_configs:
       - targets:
-          - '{{ h.maas_target | default(h.ansible_host) }}'
+          - "{{ h.maas_target | default(h.ansible_host) }}:{{ h.maas_port | default('5240') }}"
         labels:
           hostname: '{{ host }}'
 {% for key, value in (h.prometheus_labels | default({})).items() %}

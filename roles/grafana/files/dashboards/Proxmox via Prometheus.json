@@ -1,59 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__elements": {},
-  "__requires": [
-    {
-      "type": "panel",
-      "id": "bargauge",
-      "name": "Bar gauge",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "gauge",
-      "name": "Gauge",
-      "version": ""
-    },
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "9.3.2"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "stat",
-      "name": "Stat",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "table",
-      "name": "Table",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "timeseries",
-      "name": "Time series",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -82,15 +27,16 @@
   "description": "Proxmox Virtual Environment Dashboard",
   "editable": true,
   "fiscalYearStartMonth": 0,
+  "gnetId": 10347,
   "graphTooltip": 0,
-  "id": null,
+  "id": 8,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "description": "",
       "fieldConfig": {
@@ -100,7 +46,9 @@
           },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "mappings": [],
@@ -142,8 +90,10 @@
                 ]
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-text"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               },
               {
                 "id": "custom.width",
@@ -194,8 +144,10 @@
                 "value": "percentunit"
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-text"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               },
               {
                 "id": "mappings",
@@ -308,8 +260,10 @@
                 ]
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-text"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               },
               {
                 "id": "custom.width",
@@ -367,7 +321,9 @@
       },
       "id": 19,
       "options": {
+        "cellHeight": "sm",
         "footer": {
+          "countRows": false,
           "fields": "",
           "reducer": [
             "sum"
@@ -383,12 +339,12 @@
           }
         ]
       },
-      "pluginVersion": "9.3.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -403,7 +359,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -418,7 +374,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -433,7 +389,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -448,7 +404,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -463,7 +419,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -478,7 +434,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -535,7 +491,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "fieldConfig": {
         "defaults": {
@@ -543,6 +499,7 @@
             "mode": "thresholds"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -556,6 +513,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 2,
             "pointSize": 5,
@@ -617,7 +575,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "expr": "pve_cpu_usage_ratio{instance=\"$instance\"} and on(id) pve_node_info",
@@ -628,7 +586,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -661,7 +619,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "description": "",
       "fieldConfig": {
@@ -712,9 +670,10 @@
       },
       "id": 7,
       "interval": "",
-      "links": [],
       "maxDataPoints": 100,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -725,14 +684,15 @@
         },
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
+        "sizing": "auto",
         "text": {}
       },
-      "pluginVersion": "9.3.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "expr": "pve_cpu_usage_ratio{instance=\"$instance\"} / pve_cpu_usage_limit and on(id) pve_node_info",
           "format": "time_series",
@@ -747,7 +707,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "fieldConfig": {
         "defaults": {
@@ -804,14 +764,16 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name"
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "9.3.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -828,7 +790,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "fieldConfig": {
         "defaults": {
@@ -836,6 +798,7 @@
             "mode": "thresholds"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -849,6 +812,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 2,
             "pointSize": 5,
@@ -911,7 +875,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "expr": "pve_memory_usage_bytes{instance=\"$instance\"} and on(id) pve_node_info",
@@ -922,7 +886,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -955,7 +919,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "description": "",
       "fieldConfig": {
@@ -1005,9 +969,10 @@
         "y": 7
       },
       "id": 8,
-      "links": [],
       "maxDataPoints": 100,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -1018,14 +983,15 @@
         },
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
+        "sizing": "auto",
         "text": {}
       },
-      "pluginVersion": "9.3.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "expr": "pve_memory_usage_bytes{instance=\"$instance\"} / pve_memory_size_bytes and on(id) pve_node_info",
           "format": "time_series",
@@ -1040,7 +1006,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "description": "",
       "fieldConfig": {
@@ -1122,17 +1088,19 @@
           "fields": "",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "titleSize": 20
         },
-        "textMode": "value_and_name"
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "pluginVersion": "9.3.2",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1146,7 +1114,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1161,7 +1129,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1193,7 +1161,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "fieldConfig": {
         "defaults": {
@@ -1201,6 +1169,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1214,6 +1183,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 2,
             "pointSize": 5,
@@ -1259,7 +1229,6 @@
         "y": 14
       },
       "id": 2,
-      "links": [],
       "options": {
         "legend": {
           "calcs": [
@@ -1281,7 +1250,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "expr": "((pve_cpu_usage_ratio{instance=\"$instance\"} / pve_cpu_usage_limit) * on(id, instance) group_left(name, type) pve_guest_info) and on(id, instance) pve_up == 1",
           "format": "time_series",
@@ -1297,7 +1266,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "fieldConfig": {
         "defaults": {
@@ -1305,6 +1274,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1318,6 +1288,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 2,
             "pointSize": 5,
@@ -1363,7 +1334,6 @@
         "y": 14
       },
       "id": 5,
-      "links": [],
       "options": {
         "legend": {
           "calcs": [
@@ -1385,7 +1355,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "expr": "(pve_memory_usage_bytes{instance=\"$instance\"} / pve_memory_size_bytes * on(id, instance) group_left(name, type) pve_guest_info) and on(id, instance) pve_up == 1",
           "format": "time_series",
@@ -1401,7 +1371,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "fieldConfig": {
         "defaults": {
@@ -1426,8 +1396,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "yellow",
@@ -1450,7 +1419,6 @@
         "y": 24
       },
       "id": 11,
-      "links": [],
       "options": {
         "orientation": "auto",
         "reduceOptions": {
@@ -1469,7 +1437,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "exemplar": true,
           "expr": "pve_disk_usage_bytes{instance=\"$instance\", id=~\"storage/.+\"} / pve_disk_size_bytes * on (id, instance) group_left(storage) pve_storage_info",
@@ -1487,7 +1455,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "description": "",
       "fieldConfig": {
@@ -1502,8 +1470,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1522,7 +1489,6 @@
         "y": 24
       },
       "id": 15,
-      "links": [],
       "options": {
         "displayMode": "gradient",
         "minVizHeight": 10,
@@ -1545,7 +1511,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1580,7 +1546,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "fieldConfig": {
         "defaults": {
@@ -1626,8 +1592,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "transparent",
-                "value": null
+                "color": "transparent"
               },
               {
                 "color": "orange",
@@ -1651,7 +1616,6 @@
       },
       "hideTimeOverride": false,
       "id": 9,
-      "links": [],
       "options": {
         "legend": {
           "calcs": [
@@ -1671,7 +1635,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "editorMode": "code",
           "expr": "pve_disk_usage_bytes{instance=\"$instance\"} / pve_disk_size_bytes{instance=\"$instance\"} * on (id, instance) group_left(name, type) pve_guest_info{type=\"lxc\"}",
@@ -1689,7 +1653,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "description": "",
       "fieldConfig": {
@@ -1734,8 +1698,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1768,7 +1731,6 @@
       },
       "id": 13,
       "interval": "",
-      "links": [],
       "options": {
         "legend": {
           "calcs": [
@@ -1791,7 +1753,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "expr": "(rate(pve_network_receive_bytes{instance=\"$instance\"}[5m]) * on(id, instance) group_left(name, type) pve_guest_info) and on(id, instance) pve_up == 1",
           "format": "time_series",
@@ -1803,7 +1765,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "expr": "(rate(pve_network_transmit_bytes{instance=\"$instance\"}[5m])* on(id, instance) group_left(name, type) pve_guest_info) and on(id, instance) pve_up == 1",
           "format": "time_series",
@@ -1819,7 +1781,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "prometheus-monitor-node-01"
       },
       "description": "",
       "fieldConfig": {
@@ -1865,8 +1827,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1886,7 +1847,6 @@
       },
       "id": 12,
       "interval": "",
-      "links": [],
       "options": {
         "legend": {
           "calcs": [
@@ -1908,7 +1868,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "prometheus-monitor-node-01"
           },
           "expr": "((rate(pve_disk_write_bytes{instance=\"$instance\"}[5m]) + rate(pve_disk_read_bytes[5m])) * on(id, instance) group_left(name, type) pve_guest_info) and on(id, instance) pve_up == 1",
           "format": "time_series",
@@ -1923,8 +1883,7 @@
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 37,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [
     "Proxmox",
     "Prometheus"
@@ -1932,10 +1891,14 @@
   "templating": {
     "list": [
       {
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "10.0.1.226",
+          "value": "10.0.1.226"
+        },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "prometheus-monitor-node-01"
         },
         "definition": "label_values(pve_node_info, instance)",
         "hide": 0,
@@ -1988,9 +1951,8 @@
     ]
   },
   "timezone": "",
-  "title": "Proxmox via Prometheus",
-  "uid": "Dp7Cd57Zza",
-  "version": 4,
-  "weekStart": "",
-  "gnetId": 10347
+  "title": "Proxmox",
+  "uid": "Dp7Cd57Zza2",
+  "version": 2,
+  "weekStart": ""
 }

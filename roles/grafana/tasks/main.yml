@@ -83,9 +83,9 @@
     state: restarted
     daemon_reload: true
 
-- name: Enforce Grafana admin password for existing installations
-  ansible.builtin.command:
-    cmd: >-
-      grafana-cli --homepath /usr/share/grafana --config /etc/grafana/grafana.ini
-      admin reset-admin-password {{ grafana_admin_password }}
-  changed_when: false
+#- name: Enforce Grafana admin password for existing installations
+#  ansible.builtin.command:
+#    cmd: >-
+#      grafana-cli --homepath /usr/share/grafana --config /etc/grafana/grafana.ini
+#      admin reset-admin-password {{ grafana_admin_password }}
+#  changed_when: false

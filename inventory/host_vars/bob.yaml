@@ -26,7 +26,7 @@ custom_service_scrape_timeout: 10s
 
 # Optional query parameters sent to the metrics endpoint.
 # custom_service_params:
-#   module:
+#   module:e
 #     - default
 
 custom_service_labels:

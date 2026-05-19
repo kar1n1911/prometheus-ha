@@ -2,34 +2,42 @@
 auths:
   v2_public:
     community: "{{ snmp_v2_community }}"
+    security_level: noAuthNoPriv
+    auth_protocol: MD5
+    priv_protocol: DES
     version: 2
 
   v3_default:
     username: "{{ snmp_v3_username }}"
-    auth_password: "{{ snmp_v3_auth_password }}"
+    password: "{{ snmp_v3_auth_password }}"
     auth_protocol: "{{ snmp_v3_auth_protocol }}"
     priv_protocol: "{{ snmp_v3_priv_protocol }}"
     priv_password: "{{ snmp_v3_priv_password }}"
     security_level: authPriv
     version: 3
 
-{% for host in groups['snmp_switches'] %}
-  {%- set h = hostvars[host] -%}
-  {%- if h.snmp_v2_community is defined %}
+{%- for host in groups['snmp_switches'] %}
+{%- set h = hostvars[host] %}
+{%- if h.snmp_auth_name is defined %}
+{%- if h.snmp_v2_community is defined %}
   {{ h.snmp_auth_name }}:
     version: 2
     community: "{{ h.snmp_v2_community }}"
-  {%- else %}
+    security_level: noAuthNoPriv
+    auth_protocol: MD5
+    priv_protocol: DES
+{%- elif h.snmp_v3_username is defined %}
   {{ h.snmp_auth_name }}:
     version: 3
     username: "{{ h.snmp_v3_username }}"
+    password: "{{ h.snmp_v3_auth_password }}"
     security_level: authPriv
     auth_protocol: "{{ h.snmp_v3_auth_protocol }}"
-    auth_password: "{{ h.snmp_v3_auth_password }}"
     priv_protocol: "{{ h.snmp_v3_priv_protocol }}"
     priv_password: "{{ h.snmp_v3_priv_password }}"
-  {%- endif %}
-{% endfor %}
+{%- endif %}
+{%- endif %}
+{%- endfor %}
 
 
 modules:

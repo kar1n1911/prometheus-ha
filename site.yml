@@ -22,12 +22,12 @@
   gather_facts: true
   tags: [monitoring_platform]
   roles:
-    - prometheus
-    - alertmanager
-    - grafana
     - proxmox_exporter   # runs on monitoring nodes, queries PVE API
                           # as no proxmox monitor is configured or can be configured, we use a fake service.
     - snmp_exporter      # runs on monitoring nodes, queries switches via SNMP
+    - prometheus
+    - alertmanager
+    - grafana
 
 - name: Deploy HAProxy frontend for Grafana
   hosts: haproxy

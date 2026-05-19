@@ -30,193 +30,172 @@ scrape_configs:
           - 'localhost:9090'
 
   # Node Exporter — per-host options are read from inventory/host_vars/<host>.yml.
-{% if groups['linux_nodes'] | length > 0 %}
+{% if groups['linux_nodes'] %}
 {% for host in groups['linux_nodes'] %}
-  - job_name: '{{ hostvars[host].node_exporter_job_name | default("node_" ~ host) }}'
-    scrape_interval: {{ hostvars[host].node_exporter_scrape_interval | default(prometheus_scrape_interval) }}
-{% if hostvars[host].node_exporter_scrape_timeout is defined %}
-    scrape_timeout: {{ hostvars[host].node_exporter_scrape_timeout }}
+{% set h = hostvars[host] %}
+  - job_name: '{{ h.node_exporter_job_name | default("node_" ~ host) }}'
+    scrape_interval: {{ h.node_exporter_scrape_interval | default(prometheus_scrape_interval) }}
+{% if h.node_exporter_scrape_timeout is defined %}
+    scrape_timeout: {{ h.node_exporter_scrape_timeout }}
 {% endif %}
-    scheme: {{ hostvars[host].node_exporter_scheme | default('http') }}
-    metrics_path: {{ hostvars[host].node_exporter_metrics_path | default('/metrics') }}
-{% if hostvars[host].node_exporter_bearer_token is defined %}
-    bearer_token: '{{ hostvars[host].node_exporter_bearer_token }}'
-{% endif %}
-{% if hostvars[host].node_exporter_basic_auth_username is defined and hostvars[host].node_exporter_basic_auth_password is defined %}
+    scheme: {{ h.node_exporter_scheme | default('http') }}
+    metrics_path: {{ h.node_exporter_metrics_path | default('/metrics') }}
+{% if h.node_exporter_bearer_token is defined %}
+    bearer_token: '{{ h.node_exporter_bearer_token }}'
+{% elif h.node_exporter_basic_auth_username is defined and h.node_exporter_basic_auth_password is defined %}
     basic_auth:
-      username: '{{ hostvars[host].node_exporter_basic_auth_username }}'
-      password: '{{ hostvars[host].node_exporter_basic_auth_password }}'
+      username: '{{ h.node_exporter_basic_auth_username }}'
+      password: '{{ h.node_exporter_basic_auth_password }}'
 {% endif %}
-{% if hostvars[host].node_exporter_tls_insecure_skip_verify is defined or hostvars[host].node_exporter_tls_ca_file is defined or hostvars[host].node_exporter_tls_cert_file is defined or hostvars[host].node_exporter_tls_key_file is defined %}
+{% if h.node_exporter_tls_insecure_skip_verify is defined or h.node_exporter_tls_ca_file is defined or (h.node_exporter_tls_cert_file is defined and h.node_exporter_tls_key_file is defined) %}
     tls_config:
-{% if hostvars[host].node_exporter_tls_insecure_skip_verify is defined %}
-      insecure_skip_verify: {{ hostvars[host].node_exporter_tls_insecure_skip_verify | bool | lower }}
+{% if h.node_exporter_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ h.node_exporter_tls_insecure_skip_verify | bool | lower }}
 {% endif %}
-{% if hostvars[host].node_exporter_tls_ca_file is defined %}
-      ca_file: '{{ hostvars[host].node_exporter_tls_ca_file }}'
+{% if h.node_exporter_tls_ca_file is defined %}
+      ca_file: '{{ h.node_exporter_tls_ca_file }}'
 {% endif %}
-{% if hostvars[host].node_exporter_tls_cert_file is defined %}
-      cert_file: '{{ hostvars[host].node_exporter_tls_cert_file }}'
-{% endif %}
-{% if hostvars[host].node_exporter_tls_key_file is defined %}
-      key_file: '{{ hostvars[host].node_exporter_tls_key_file }}'
+{% if h.node_exporter_tls_cert_file is defined and h.node_exporter_tls_key_file is defined %}
+      cert_file: '{{ h.node_exporter_tls_cert_file }}'
+      key_file: '{{ h.node_exporter_tls_key_file }}'
 {% endif %}
 {% endif %}
     static_configs:
       - targets:
-          - '{{ hostvars[host].node_exporter_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].node_exporter_port | default(node_exporter_port))) }}'
+          - '{{ h.node_exporter_target | default(h.ansible_host ~ ":" ~ (h.node_exporter_port | default(node_exporter_port))) }}'
         labels:
           hostname: '{{ host }}'
-{% if hostvars[host].prometheus_labels is defined %}
-{% for key, value in hostvars[host].prometheus_labels.items() %}
+{% for key, value in (h.prometheus_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
-{% if hostvars[host].node_exporter_labels is defined %}
-{% for key, value in hostvars[host].node_exporter_labels.items() %}
+{% for key, value in (h.node_exporter_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
 {% endfor %}
 {% endif %}
 
   # PostgreSQL exporter — per-host options are read from inventory/host_vars/<host>.yml.
-{% if groups['postgres_servers'] | length > 0 %}
+{% if groups['postgres_servers'] %}
 {% for host in groups['postgres_servers'] %}
-  - job_name: '{{ hostvars[host].postgres_exporter_job_name | default("postgres_" ~ host) }}'
-    scrape_interval: {{ hostvars[host].postgres_exporter_scrape_interval | default(prometheus_scrape_interval) }}
-{% if hostvars[host].postgres_exporter_scrape_timeout is defined %}
-    scrape_timeout: {{ hostvars[host].postgres_exporter_scrape_timeout }}
+{% set h = hostvars[host] %}
+  - job_name: '{{ h.postgres_exporter_job_name | default("postgres_" ~ host) }}'
+    scrape_interval: {{ h.postgres_exporter_scrape_interval | default(prometheus_scrape_interval) }}
+{% if h.postgres_exporter_scrape_timeout is defined %}
+    scrape_timeout: {{ h.postgres_exporter_scrape_timeout }}
 {% endif %}
-    scheme: {{ hostvars[host].postgres_exporter_scheme | default('http') }}
-    metrics_path: {{ hostvars[host].postgres_exporter_metrics_path | default('/metrics') }}
-{% if hostvars[host].postgres_exporter_bearer_token is defined %}
-    bearer_token: '{{ hostvars[host].postgres_exporter_bearer_token }}'
-{% endif %}
-{% if hostvars[host].postgres_exporter_basic_auth_username is defined and hostvars[host].postgres_exporter_basic_auth_password is defined %}
+    scheme: {{ h.postgres_exporter_scheme | default('http') }}
+    metrics_path: {{ h.postgres_exporter_metrics_path | default('/metrics') }}
+{% if h.postgres_exporter_bearer_token is defined %}
+    bearer_token: '{{ h.postgres_exporter_bearer_token }}'
+{% elif h.postgres_exporter_basic_auth_username is defined and h.postgres_exporter_basic_auth_password is defined %}
     basic_auth:
-      username: '{{ hostvars[host].postgres_exporter_basic_auth_username }}'
-      password: '{{ hostvars[host].postgres_exporter_basic_auth_password }}'
+      username: '{{ h.postgres_exporter_basic_auth_username }}'
+      password: '{{ h.postgres_exporter_basic_auth_password }}'
 {% endif %}
-{% if hostvars[host].postgres_exporter_tls_insecure_skip_verify is defined or hostvars[host].postgres_exporter_tls_ca_file is defined or hostvars[host].postgres_exporter_tls_cert_file is defined or hostvars[host].postgres_exporter_tls_key_file is defined %}
+{% if h.postgres_exporter_tls_insecure_skip_verify is defined or h.postgres_exporter_tls_ca_file is defined or (h.postgres_exporter_tls_cert_file is defined and h.postgres_exporter_tls_key_file is defined) %}
     tls_config:
-{% if hostvars[host].postgres_exporter_tls_insecure_skip_verify is defined %}
-      insecure_skip_verify: {{ hostvars[host].postgres_exporter_tls_insecure_skip_verify | bool | lower }}
+{% if h.postgres_exporter_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ h.postgres_exporter_tls_insecure_skip_verify | bool | lower }}
 {% endif %}
-{% if hostvars[host].postgres_exporter_tls_ca_file is defined %}
-      ca_file: '{{ hostvars[host].postgres_exporter_tls_ca_file }}'
+{% if h.postgres_exporter_tls_ca_file is defined %}
+      ca_file: '{{ h.postgres_exporter_tls_ca_file }}'
 {% endif %}
-{% if hostvars[host].postgres_exporter_tls_cert_file is defined %}
-      cert_file: '{{ hostvars[host].postgres_exporter_tls_cert_file }}'
-{% endif %}
-{% if hostvars[host].postgres_exporter_tls_key_file is defined %}
-      key_file: '{{ hostvars[host].postgres_exporter_tls_key_file }}'
+{% if h.postgres_exporter_tls_cert_file is defined and h.postgres_exporter_tls_key_file is defined %}
+      cert_file: '{{ h.postgres_exporter_tls_cert_file }}'
+      key_file: '{{ h.postgres_exporter_tls_key_file }}'
 {% endif %}
 {% endif %}
     static_configs:
       - targets:
-          - '{{ hostvars[host].postgres_exporter_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].postgres_exporter_port | default(postgres_exporter_port))) }}'
+          - '{{ h.postgres_exporter_target | default(h.ansible_host ~ ":" ~ (h.postgres_exporter_port | default(postgres_exporter_port))) }}'
         labels:
           hostname: '{{ host }}'
-{% if hostvars[host].prometheus_labels is defined %}
-{% for key, value in hostvars[host].prometheus_labels.items() %}
+{% for key, value in (h.prometheus_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
-{% if hostvars[host].postgres_exporter_labels is defined %}
-{% for key, value in hostvars[host].postgres_exporter_labels.items() %}
+{% for key, value in (h.postgres_exporter_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
 {% endfor %}
 {% endif %}
 
   # Custom services — exporters already exist on these hosts.
   # Per-host options are read from inventory/host_vars/<host>.yml.
-{% if groups['custom_service'] is defined and groups['custom_service'] | length > 0 %}
+{% if groups['custom_service'] is defined and groups['custom_service'] %}
 {% for host in groups['custom_service'] %}
-  - job_name: '{{ hostvars[host].custom_service_job_name | default("custom_service_" ~ host) }}'
-    scrape_interval: {{ hostvars[host].custom_service_scrape_interval | default(prometheus_scrape_interval) }}
-{% if hostvars[host].custom_service_scrape_timeout is defined %}
-    scrape_timeout: {{ hostvars[host].custom_service_scrape_timeout }}
+{% set h = hostvars[host] %}
+  - job_name: '{{ h.custom_service_job_name | default("custom_service_" ~ host) }}'
+    scrape_interval: {{ h.custom_service_scrape_interval | default(prometheus_scrape_interval) }}
+{% if h.custom_service_scrape_timeout is defined %}
+    scrape_timeout: {{ h.custom_service_scrape_timeout }}
 {% endif %}
-    scheme: {{ hostvars[host].custom_service_scheme | default('http') }}
-    metrics_path: {{ hostvars[host].custom_service_metrics_path | default('/metrics') }}
-{% if hostvars[host].custom_service_params is defined %}
+    scheme: {{ h.custom_service_scheme | default('http') }}
+    metrics_path: {{ h.custom_service_metrics_path | default('/metrics') }}
+{% if h.custom_service_params is defined %}
     params:
-{% for key, value in hostvars[host].custom_service_params.items() %}
+{% for key, value in h.custom_service_params.items() %}
       {{ key }}: {{ value | to_json }}
 {% endfor %}
 {% endif %}
-{% if hostvars[host].custom_service_basic_auth_username is defined and hostvars[host].custom_service_basic_auth_password is defined %}
+{% if h.custom_service_bearer_token is defined %}
+    bearer_token: '{{ h.custom_service_bearer_token }}'
+{% elif h.custom_service_basic_auth_username is defined and h.custom_service_basic_auth_password is defined %}
     basic_auth:
-      username: '{{ hostvars[host].custom_service_basic_auth_username }}'
-      password: '{{ hostvars[host].custom_service_basic_auth_password }}'
+      username: '{{ h.custom_service_basic_auth_username }}'
+      password: '{{ h.custom_service_basic_auth_password }}'
 {% endif %}
-{% if hostvars[host].custom_service_bearer_token is defined %}
-    bearer_token: '{{ hostvars[host].custom_service_bearer_token }}'
-{% endif %}
-{% if hostvars[host].custom_service_tls_insecure_skip_verify is defined or hostvars[host].custom_service_tls_ca_file is defined or hostvars[host].custom_service_tls_cert_file is defined or hostvars[host].custom_service_tls_key_file is defined %}
+{% if h.custom_service_tls_insecure_skip_verify is defined or h.custom_service_tls_ca_file is defined or (h.custom_service_tls_cert_file is defined and h.custom_service_tls_key_file is defined) %}
     tls_config:
-{% if hostvars[host].custom_service_tls_insecure_skip_verify is defined %}
-      insecure_skip_verify: {{ hostvars[host].custom_service_tls_insecure_skip_verify | bool | lower }}
+{% if h.custom_service_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ h.custom_service_tls_insecure_skip_verify | bool | lower }}
 {% endif %}
-{% if hostvars[host].custom_service_tls_ca_file is defined %}
-      ca_file: '{{ hostvars[host].custom_service_tls_ca_file }}'
+{% if h.custom_service_tls_ca_file is defined %}
+      ca_file: '{{ h.custom_service_tls_ca_file }}'
 {% endif %}
-{% if hostvars[host].custom_service_tls_cert_file is defined %}
-      cert_file: '{{ hostvars[host].custom_service_tls_cert_file }}'
-{% endif %}
-{% if hostvars[host].custom_service_tls_key_file is defined %}
-      key_file: '{{ hostvars[host].custom_service_tls_key_file }}'
+{% if h.custom_service_tls_cert_file is defined and h.custom_service_tls_key_file is defined %}
+      cert_file: '{{ h.custom_service_tls_cert_file }}'
+      key_file: '{{ h.custom_service_tls_key_file }}'
 {% endif %}
 {% endif %}
     static_configs:
       - targets:
-          - '{{ hostvars[host].custom_service_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].custom_service_port | default(9100))) }}'
+          - '{{ h.custom_service_target | default(h.ansible_host ~ ":" ~ (h.custom_service_port | default(9100))) }}'
         labels:
           hostname: '{{ host }}'
-{% if hostvars[host].prometheus_labels is defined %}
-{% for key, value in hostvars[host].prometheus_labels.items() %}
+{% for key, value in (h.prometheus_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
-{% if hostvars[host].custom_service_labels is defined %}
-{% for key, value in hostvars[host].custom_service_labels.items() %}
+{% for key, value in (h.custom_service_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
 {% endfor %}
 {% endif %}
 
   # Proxmox VE — per-node options are read from inventory/host_vars/<host>.yml.
-{% if groups['proxmox_nodes'] | length > 0 %}
+{% if groups['proxmox_nodes'] %}
 {% for host in groups['proxmox_nodes'] %}
-  - job_name: '{{ hostvars[host].proxmox_job_name | default("proxmox_" ~ host) }}'
-    scrape_interval: {{ hostvars[host].proxmox_scrape_interval | default(prometheus_scrape_interval) }}
-{% if hostvars[host].proxmox_scrape_timeout is defined %}
-    scrape_timeout: {{ hostvars[host].proxmox_scrape_timeout }}
+{% set h = hostvars[host] %}
+  - job_name: '{{ h.proxmox_job_name | default("proxmox_" ~ host) }}'
+    scrape_interval: {{ h.proxmox_scrape_interval | default(prometheus_scrape_interval) }}
+{% if h.proxmox_scrape_timeout is defined %}
+    scrape_timeout: {{ h.proxmox_scrape_timeout }}
 {% endif %}
-    metrics_path: {{ hostvars[host].proxmox_metrics_path | default('/pve') }}
+    metrics_path: {{ h.proxmox_metrics_path | default('/pve') }}
     params:
-      module: ['{{ hostvars[host].proxmox_module_name | default("default") }}']
-      cluster: ['{{ hostvars[host].proxmox_cluster | default("1") }}']
-      node: ['{{ hostvars[host].proxmox_node | default("1") }}']
+      module: ['{{ h.proxmox_module_name | default("default") }}']
+      cluster: ['{{ h.proxmox_cluster | default("1") }}']
+      node: ['{{ h.proxmox_node | default("1") }}']
     static_configs:
       - targets:
-          - '{{ hostvars[host].ansible_host }}'
+          - '{{ h.ansible_host }}'
         labels:
           hostname: '{{ host }}'
-{% if hostvars[host].prometheus_labels is defined %}
-{% for key, value in hostvars[host].prometheus_labels.items() %}
+{% for key, value in (h.prometheus_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
-{% if hostvars[host].proxmox_labels is defined %}
-{% for key, value in hostvars[host].proxmox_labels.items() %}
+{% for key, value in (h.proxmox_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -228,105 +207,95 @@ scrape_configs:
 {% endif %}
 
   # MAAS region controller — per-host options are read from inventory/host_vars/<host>.yml.
-{% if groups['maas_controllers'] | length > 0 %}
+{% if groups['maas_controllers'] %}
 {% for host in groups['maas_controllers'] %}
-  - job_name: '{{ hostvars[host].maas_job_name | default("maas_" ~ host) }}'
-    scrape_interval: {{ hostvars[host].maas_scrape_interval | default(prometheus_scrape_interval) }}
-{% if hostvars[host].maas_scrape_timeout is defined %}
-    scrape_timeout: {{ hostvars[host].maas_scrape_timeout }}
+{% set h = hostvars[host] %}
+  - job_name: '{{ h.maas_job_name | default("maas_" ~ host) }}'
+    scrape_interval: {{ h.maas_scrape_interval | default(prometheus_scrape_interval) }}
+{% if h.maas_scrape_timeout is defined %}
+    scrape_timeout: {{ h.maas_scrape_timeout }}
 {% endif %}
-    scheme: {{ hostvars[host].maas_scheme | default('http') }}
-    metrics_path: {{ hostvars[host].maas_metrics_path | default('/MAAS/metrics') }}
-{% if hostvars[host].maas_bearer_token is defined %}
-    bearer_token: '{{ hostvars[host].maas_bearer_token }}'
-{% endif %}
-{% if hostvars[host].maas_basic_auth_username is defined and hostvars[host].maas_basic_auth_password is defined %}
+    scheme: {{ h.maas_scheme | default('http') }}
+    metrics_path: {{ h.maas_metrics_path | default('/snmp') }}
+    params:
+      module: ['{{ h.maas_snmp_module | default("if_mib") }}']
+{% if h.maas_bearer_token is defined %}
+    bearer_token: '{{ h.maas_bearer_token }}'
+{% elif h.maas_basic_auth_username is defined and h.maas_basic_auth_password is defined %}
     basic_auth:
-      username: '{{ hostvars[host].maas_basic_auth_username }}'
-      password: '{{ hostvars[host].maas_basic_auth_password }}'
+      username: '{{ h.maas_basic_auth_username }}'
+      password: '{{ h.maas_basic_auth_password }}'
 {% endif %}
-{% if hostvars[host].maas_tls_insecure_skip_verify is defined or hostvars[host].maas_tls_ca_file is defined or hostvars[host].maas_tls_cert_file is defined or hostvars[host].maas_tls_key_file is defined %}
+{% if h.maas_tls_insecure_skip_verify is defined or h.maas_tls_ca_file is defined or (h.maas_tls_cert_file is defined and h.maas_tls_key_file is defined) %}
     tls_config:
-{% if hostvars[host].maas_tls_insecure_skip_verify is defined %}
-      insecure_skip_verify: {{ hostvars[host].maas_tls_insecure_skip_verify | bool | lower }}
+{% if h.maas_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ h.maas_tls_insecure_skip_verify | bool | lower }}
 {% endif %}
-{% if hostvars[host].maas_tls_ca_file is defined %}
-      ca_file: '{{ hostvars[host].maas_tls_ca_file }}'
+{% if h.maas_tls_ca_file is defined %}
+      ca_file: '{{ h.maas_tls_ca_file }}'
 {% endif %}
-{% if hostvars[host].maas_tls_cert_file is defined %}
-      cert_file: '{{ hostvars[host].maas_tls_cert_file }}'
-{% endif %}
-{% if hostvars[host].maas_tls_key_file is defined %}
-      key_file: '{{ hostvars[host].maas_tls_key_file }}'
+{% if h.maas_tls_cert_file is defined and h.maas_tls_key_file is defined %}
+      cert_file: '{{ h.maas_tls_cert_file }}'
+      key_file: '{{ h.maas_tls_key_file }}'
 {% endif %}
 {% endif %}
     static_configs:
       - targets:
-          - '{{ hostvars[host].maas_target | default(hostvars[host].ansible_host ~ ":" ~ (hostvars[host].maas_port | default(5240))) }}'
+          - '{{ h.maas_target | default(h.ansible_host) }}'
         labels:
           hostname: '{{ host }}'
-{% if hostvars[host].prometheus_labels is defined %}
-{% for key, value in hostvars[host].prometheus_labels.items() %}
+{% for key, value in (h.prometheus_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
-{% if hostvars[host].maas_labels is defined %}
-{% for key, value in hostvars[host].maas_labels.items() %}
+{% for key, value in (h.maas_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
 {% endfor %}
 {% endif %}
 
   # SNMP switches via snmp_exporter.
   # Per-switch scrape options are read from inventory/host_vars/<host>.yml.
-{% if groups['snmp_switches'] is defined and groups['snmp_switches'] | length > 0 %}
+{% if groups['snmp_switches'] is defined and groups['snmp_switches'] %}
 {% for host in groups['snmp_switches'] %}
-  - job_name: '{{ hostvars[host].snmp_job_name | default("snmp_" ~ host) }}'
-    scrape_interval: {{ hostvars[host].snmp_scrape_interval | default(snmp_scrape_interval) }}
-    scrape_timeout: {{ hostvars[host].snmp_scrape_timeout | default(snmp_scrape_timeout) }}
+{% set h = hostvars[host] %}
+  - job_name: '{{ h.snmp_job_name | default("snmp_" ~ host) }}'
+    scrape_interval: {{ h.snmp_scrape_interval | default(snmp_scrape_interval) }}
+    scrape_timeout: {{ h.snmp_scrape_timeout | default(snmp_scrape_timeout) }}
     metrics_path: /snmp
-{% if hostvars[host].snmp_bearer_token is defined %}
-    bearer_token: '{{ hostvars[host].snmp_bearer_token }}'
-{% endif %}
-{% if hostvars[host].snmp_basic_auth_username is defined and hostvars[host].snmp_basic_auth_password is defined %}
+{% if h.snmp_bearer_token is defined %}
+    bearer_token: '{{ h.snmp_bearer_token }}'
+{% elif h.snmp_basic_auth_username is defined and h.snmp_basic_auth_password is defined %}
     basic_auth:
-      username: '{{ hostvars[host].snmp_basic_auth_username }}'
-      password: '{{ hostvars[host].snmp_basic_auth_password }}'
+      username: '{{ h.snmp_basic_auth_username }}'
+      password: '{{ h.snmp_basic_auth_password }}'
 {% endif %}
-{% if hostvars[host].snmp_tls_insecure_skip_verify is defined or hostvars[host].snmp_tls_ca_file is defined or hostvars[host].snmp_tls_cert_file is defined or hostvars[host].snmp_tls_key_file is defined %}
+{% if h.snmp_tls_insecure_skip_verify is defined or h.snmp_tls_ca_file is defined or (h.snmp_tls_cert_file is defined and h.snmp_tls_key_file is defined) %}
     tls_config:
-{% if hostvars[host].snmp_tls_insecure_skip_verify is defined %}
-      insecure_skip_verify: {{ hostvars[host].snmp_tls_insecure_skip_verify | bool | lower }}
+{% if h.snmp_tls_insecure_skip_verify is defined %}
+      insecure_skip_verify: {{ h.snmp_tls_insecure_skip_verify | bool | lower }}
 {% endif %}
-{% if hostvars[host].snmp_tls_ca_file is defined %}
-      ca_file: '{{ hostvars[host].snmp_tls_ca_file }}'
+{% if h.snmp_tls_ca_file is defined %}
+      ca_file: '{{ h.snmp_tls_ca_file }}'
 {% endif %}
-{% if hostvars[host].snmp_tls_cert_file is defined %}
-      cert_file: '{{ hostvars[host].snmp_tls_cert_file }}'
-{% endif %}
-{% if hostvars[host].snmp_tls_key_file is defined %}
-      key_file: '{{ hostvars[host].snmp_tls_key_file }}'
+{% if h.snmp_tls_cert_file is defined and h.snmp_tls_key_file is defined %}
+      cert_file: '{{ h.snmp_tls_cert_file }}'
+      key_file: '{{ h.snmp_tls_key_file }}'
 {% endif %}
 {% endif %}
     params:
-      module: ['{{ hostvars[host].snmp_module_name | default(snmp_module_name) }}']
-      auth: ['{{ hostvars[host].snmp_auth_name | default("v2_public") }}']
+      module: ['{{ h.snmp_module_name | default(snmp_module_name) }}']
+      auth: ['{{ h.snmp_auth_name | default("v2_public") }}']
     static_configs:
       - targets:
-          - '{{ hostvars[host].ansible_host }}'
+          - '{{ h.ansible_host }}'
         labels:
           hostname: '{{ host }}'
-{% if hostvars[host].prometheus_labels is defined %}
-{% for key, value in hostvars[host].prometheus_labels.items() %}
+{% for key, value in (h.prometheus_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
-{% if hostvars[host].snmp_labels is defined %}
-{% for key, value in hostvars[host].snmp_labels.items() %}
+{% for key, value in (h.snmp_labels | default({})).items() %}
           {{ key }}: '{{ value }}'
 {% endfor %}
-{% endif %}
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

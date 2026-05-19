@@ -9,26 +9,39 @@ custom_service_metrics_path: /metrics
 custom_service_scrape_interval: 30s
 custom_service_scrape_timeout: 10s
 
-# Use these when the exporter requires HTTP Basic authentication.
-# Prefer moving real credentials to inventory/group_vars/all/vault.yml.
-# custom_service_basic_auth_username: "{{ vault_bob_exporter_username }}"
-# custom_service_basic_auth_password: "{{ vault_bob_exporter_password }}"
+# ── query  ──
+custom_service_params:
+  module:
+    - default
 
-# Use this instead of basic_auth when the exporter expects a bearer token.
-# custom_service_bearer_token: "{{ vault_bob_exporter_bearer_token }}"
+# custom_service_bearer_token: "{{ vault_bob_bearer_token }}"
 
-# Optional TLS settings for HTTPS exporters.
+# custom_service_basic_auth_username: "{{ vault_bob_username }}"
+# custom_service_basic_auth_password: "{{ vault_bob_password }}"
+
+# ── TLS ──
 # custom_service_scheme: https
 # custom_service_tls_insecure_skip_verify: false
 # custom_service_tls_ca_file: /etc/prometheus/certs/bob-ca.crt
 # custom_service_tls_cert_file: /etc/prometheus/certs/bob-client.crt
 # custom_service_tls_key_file: /etc/prometheus/certs/bob-client.key
 
-# Optional query parameters sent to the metrics endpoint.
-# custom_service_params:
-#   module:e
-#     - default
+# ── tag ──
+prometheus_labels:
+  region: eu-west
 
 custom_service_labels:
   service: bob
-  environment: custom
+  environment: production
+
+# ── Relabel ──
+custom_service_relabel_configs:
+  - source_labels: [__address__]
+    regex: '([^:]+):\d+'
+    target_label: instance
+    replacement: '$1'
+
+custom_service_metric_relabel_configs:
+  - source_labels: [__name__]
+    regex: 'go_.*'
+    action: drop

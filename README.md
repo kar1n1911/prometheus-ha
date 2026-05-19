@@ -490,25 +490,52 @@ metrics path can differ per host.
 
 #### custom_service host_vars API
 
-| Variable | Required | Default | Description |
-|---|---:|---|---|
-| `custom_service_job_name` | No | `custom_service_<host>` | Prometheus `job_name`. |
-| `custom_service_target` | No | `<ansible_host>:<custom_service_port>` | Full target address. Use this to override host and port together. |
-| `custom_service_port` | No | `9100` | Exporter port when `custom_service_target` is not set. |
-| `custom_service_scheme` | No | `http` | Prometheus scrape scheme, usually `http` or `https`. |
-| `custom_service_metrics_path` | No | `/metrics` | Metrics endpoint path. |
-| `custom_service_scrape_interval` | No | `prometheus_scrape_interval` | Per-service scrape interval. |
-| `custom_service_scrape_timeout` | No | unset | Per-service scrape timeout. |
-| `custom_service_basic_auth_username` | No | unset | Basic Auth username. Requires password too. |
-| `custom_service_basic_auth_password` | No | unset | Basic Auth password. Store real values in Vault. |
-| `custom_service_bearer_token` | No | unset | Bearer token for token-authenticated exporters. Store real values in Vault. |
-| `custom_service_tls_insecure_skip_verify` | No | unset | Sets Prometheus `tls_config.insecure_skip_verify`. |
-| `custom_service_tls_ca_file` | No | unset | CA file path on the monitoring host. |
-| `custom_service_tls_cert_file` | No | unset | Client cert file path on the monitoring host. |
-| `custom_service_tls_key_file` | No | unset | Client key file path on the monitoring host. |
-| `custom_service_params` | No | unset | Query params passed to the scrape endpoint. Values should be YAML lists. |
-| `custom_service_labels` | No | unset | Extra labels added to this target. |
-| `prometheus_labels` | No | unset | Existing shared per-host labels; also applied to custom service targets. |
+---
+
+##### Basic Scrape Settings
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `custom_service_job_name` | No | `custom_service_<host>` | Prometheus job name |
+| `custom_service_port` | No | `9100` | Exporter port |
+| `custom_service_target` | No | `ansible_host:port` | Full target address; overrides port when set |
+| `custom_service_scheme` | No | `http` | `http` or `https` |
+| `custom_service_metrics_path` | No | `/metrics` | Metrics endpoint path |
+| `custom_service_scrape_interval` | No | `prometheus_scrape_interval` | Scrape interval, e.g. `30s` |
+| `custom_service_scrape_timeout` | No | *(omitted)* | Scrape timeout, e.g. `10s` |
+| `custom_service_params` | No | *(omitted)* | Extra query parameters (see example below) |
+
+---
+
+##### Authentication
+
+| Key | Required | Description |
+|---|---|---|
+| `custom_service_bearer_token` | No | Bearer token; takes precedence over basic auth |
+| `custom_service_basic_auth_username` | No | Basic auth username; must be defined together with password |
+| `custom_service_basic_auth_password` | No | Basic auth password; must be defined together with username |
+
+---
+
+##### TLS
+
+| Key | Required | Description |
+|---|---|---|
+| `custom_service_tls_insecure_skip_verify` | No | Skip certificate verification, `true` or `false` |
+| `custom_service_tls_ca_file` | No | Path to CA certificate |
+| `custom_service_tls_cert_file` | No | Path to client certificate |
+| `custom_service_tls_key_file` | No | Path to client private key |
+
+---
+
+##### Labels & Relabeling
+
+| Key | Required | Description |
+|---|---|---|
+| `prometheus_labels` | No | Generic labels; lower priority than `custom_service_labels` |
+| `custom_service_labels` | No | Service-specific labels; overrides `prometheus_labels` on key collision |
+| `custom_service_relabel_configs` | No | List of target-level relabel rules, applied before scrape |
+| `custom_service_metric_relabel_configs` | No | List of metric-level relabel rules, applied after scrape |
 
 ## Architecture notes
 

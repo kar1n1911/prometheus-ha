@@ -121,53 +121,91 @@ scrape_configs:
 
   # Custom services — exporters already exist on these hosts.
   # Per-host options are read from inventory/host_vars/<host>.yml.
-{% if groups['custom_service'] is defined and groups['custom_service'] %}
+{% if groups['custom_service'] is defined and groups['custom_service'] | length > 0 %}
 {% for host in groups['custom_service'] %}
 {% set h = hostvars[host] %}
+{% if h.custom_service_target is defined %}
+{%   set _target = h.custom_service_target %}
+{% else %}
+{%   set _port   = h.custom_service_port | default(9100) %}
+{%   set _target = h.ansible_host ~ ':' ~ _port %}
+{% endif %}
+{% set _labels = {} %}
+{% if h.prometheus_labels is defined %}
+{%   set _labels = _labels | combine(h.prometheus_labels) %}
+{% endif %}
+{% if h.custom_service_labels is defined %}
+{%   set _labels = _labels | combine(h.custom_service_labels) %}
+{% endif %}
+{% set _has_tls = (
+     h.custom_service_tls_insecure_skip_verify is defined or
+     h.custom_service_tls_ca_file              is defined or
+     h.custom_service_tls_cert_file            is defined or
+     h.custom_service_tls_key_file             is defined
+   ) %}
   - job_name: '{{ h.custom_service_job_name | default("custom_service_" ~ host) }}'
     scrape_interval: {{ h.custom_service_scrape_interval | default(prometheus_scrape_interval) }}
 {% if h.custom_service_scrape_timeout is defined %}
-    scrape_timeout: {{ h.custom_service_scrape_timeout }}
+    scrape_timeout:  {{ h.custom_service_scrape_timeout }}
 {% endif %}
-    scheme: {{ h.custom_service_scheme | default('http') }}
-    metrics_path: {{ h.custom_service_metrics_path | default('/metrics') }}
+    scheme:          {{ h.custom_service_scheme       | default('http') }}
+    metrics_path:    {{ h.custom_service_metrics_path | default('/metrics') }}
 {% if h.custom_service_params is defined %}
     params:
-{% for key, value in h.custom_service_params.items() %}
-      {{ key }}: {{ value | to_json }}
-{% endfor %}
+{%   for key, val in h.custom_service_params.items() %}
+      {{ key }}:
+{%     if val is iterable and val is not string %}
+{%       for item in val %}
+        - {{ item }}
+{%       endfor %}
+{%     else %}
+        - {{ val }}
+{%     endif %}
+{%   endfor %}
 {% endif %}
+
 {% if h.custom_service_bearer_token is defined %}
     bearer_token: '{{ h.custom_service_bearer_token }}'
-{% elif h.custom_service_basic_auth_username is defined and h.custom_service_basic_auth_password is defined %}
+{% elif h.custom_service_basic_auth_username is defined and
+        h.custom_service_basic_auth_password is defined %}
     basic_auth:
       username: '{{ h.custom_service_basic_auth_username }}'
       password: '{{ h.custom_service_basic_auth_password }}'
 {% endif %}
-{% if h.custom_service_tls_insecure_skip_verify is defined or h.custom_service_tls_ca_file is defined or (h.custom_service_tls_cert_file is defined and h.custom_service_tls_key_file is defined) %}
+
+{% if _has_tls %}
     tls_config:
-{% if h.custom_service_tls_insecure_skip_verify is defined %}
+{%   if h.custom_service_tls_insecure_skip_verify is defined %}
       insecure_skip_verify: {{ h.custom_service_tls_insecure_skip_verify | bool | lower }}
-{% endif %}
-{% if h.custom_service_tls_ca_file is defined %}
-      ca_file: '{{ h.custom_service_tls_ca_file }}'
-{% endif %}
-{% if h.custom_service_tls_cert_file is defined and h.custom_service_tls_key_file is defined %}
+{%   endif %}
+{%   if h.custom_service_tls_ca_file is defined %}
+      ca_file:   '{{ h.custom_service_tls_ca_file }}'
+{%   endif %}
+{%   if h.custom_service_tls_cert_file is defined %}
       cert_file: '{{ h.custom_service_tls_cert_file }}'
-      key_file: '{{ h.custom_service_tls_key_file }}'
+{%   endif %}
+{%   if h.custom_service_tls_key_file is defined %}
+      key_file:  '{{ h.custom_service_tls_key_file }}'
+{%   endif %}
 {% endif %}
+
+{% if h.custom_service_relabel_configs is defined %}
+    relabel_configs:
+{{ h.custom_service_relabel_configs | to_nice_yaml(indent=2) | indent(6, first=true) }}
+{% endif %}
+
+{% if h.custom_service_metric_relabel_configs is defined %}
+    metric_relabel_configs:
+{{ h.custom_service_metric_relabel_configs | to_nice_yaml(indent=2) | indent(6, first=true) }}
 {% endif %}
     static_configs:
       - targets:
-          - '{{ h.custom_service_target | default(h.ansible_host ~ ":" ~ (h.custom_service_port | default(9100))) }}'
+          - '{{ _target }}'
         labels:
           hostname: '{{ host }}'
-{% for key, value in (h.prometheus_labels | default({})).items() %}
+{%   for key, value in _labels.items() %}
           {{ key }}: '{{ value }}'
-{% endfor %}
-{% for key, value in (h.custom_service_labels | default({})).items() %}
-          {{ key }}: '{{ value }}'
-{% endfor %}
+{%   endfor %}
 {% endfor %}
 {% endif %}
 

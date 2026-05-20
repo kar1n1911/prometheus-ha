@@ -488,11 +488,11 @@ The implementation lives in
 gets its own scrape job so credentials, scrape interval, timeout, scheme, and
 metrics path can differ per host.
 
-#### custom_service host_vars API
+## custom_service host_vars API
 
 ---
 
-##### Basic Scrape Settings
+### Basic Scrape Settings
 
 | Key | Required | Default | Description |
 |---|---|---|---|
@@ -507,7 +507,7 @@ metrics path can differ per host.
 
 ---
 
-##### Authentication
+### Authentication
 
 | Key | Required | Description |
 |---|---|---|
@@ -517,7 +517,7 @@ metrics path can differ per host.
 
 ---
 
-##### TLS
+### TLS
 
 | Key | Required | Description |
 |---|---|---|
@@ -528,7 +528,7 @@ metrics path can differ per host.
 
 ---
 
-##### Labels & Relabeling
+### Labels & Relabeling
 
 | Key | Required | Description |
 |---|---|---|

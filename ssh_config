@@ -3,7 +3,7 @@
 
 
 Host bastion
-  HostName 194.47.155.115
+  HostName 
   User ubuntu
   IdentityFile Global_Key.pem
   IdentitiesOnly yes

@@ -254,9 +254,7 @@ scrape_configs:
     scrape_timeout: {{ h.maas_scrape_timeout }}
 {% endif %}
     scheme: {{ h.maas_scheme | default('http') }}
-    metrics_path: {{ h.maas_metrics_path | default('/snmp') }}
-    params:
-      module: ['{{ h.maas_snmp_module | default("if_mib") }}']
+    metrics_path: {{ h.maas_metrics_path | default('/MAAS/metrics') }}
 {% if h.maas_bearer_token is defined %}
     bearer_token: '{{ h.maas_bearer_token }}'
 {% elif h.maas_basic_auth_username is defined and h.maas_basic_auth_password is defined %}
